@@ -1,5 +1,5 @@
 # HealthZone
-Najbolja poliklinika! COMING SOON...
+**Najbolja poliklinika! COMING SOON...**
 
 ## Funkcionalnosti
 - Registracija pacijenata
