@@ -5,10 +5,10 @@
 - Izračun cijene usluga
 
 ## Članovi
-Ajša Brka - 20041 
+- Ajša Brka - 20041 
 
-Emina Vatrić - 19936
+- Emina Vatrić - 19936
 
-Amina Bukvić - 20049
+- Amina Bukvić - 20049
 
-Irhad Breščić - 19837
+- Irhad Breščić - 19837
