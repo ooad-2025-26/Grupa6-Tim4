@@ -1,4 +1,6 @@
 # HealthZone
+Najbolja poliklinika! COMING SOON...
+
 ## Funkcionalnosti
 - Registracija pacijenata
 - Zakazivanje pregleda
