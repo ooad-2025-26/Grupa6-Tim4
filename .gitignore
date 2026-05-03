@@ -1,4 +1,4 @@
-﻿# Build results
+﻿Build results
 [Dd]ebug/
 [Rr]elease/
 x64/
@@ -11,18 +11,19 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
-# Visual Studio files
+Visual Studio files
 .vs/
+.vscode/
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
 *.userprefs
 
-# NuGet
+NuGet
 *.nupkg
 *.snupkg
-**/[Pp]ackages/*
+/[Pp]ackages/
 !**/[Pp]ackages/build/
 *.nuget.props
 *.nuget.targets
@@ -30,37 +31,38 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
-# ASP.NET
+ASP.NET
 wwwroot/lib/
 appsettings.*.json
 !appsettings.Development.json
 launchSettings.json
 
-# Secrets & config
+Secrets & config
 **/secrets.json
 *.pfx
 *.cer
 
-# Node / Frontend tooling (if using npm/yarn)
+Node / Frontend tooling (if using npm/yarn)
 node_modules/
 npm-debug.log
 yarn-error.log
 dist/
 .parcel-cache/
 
-# Rider / JetBrains
+Rider / JetBrains
 .idea/
 *.sln.iml
 
-# OS
+OS
 .DS_Store
 Thumbs.db
 
-# Test results
+Test results
 TestResults/
 *.trx
 *.coverage
 *.coveragexml
 
-# Publish output
+Publish output
 **/publish/
+.gitignore file
