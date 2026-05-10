@@ -1,0 +1,59 @@
+@model IEnumerable<HealthZone.Models.Notifikacija>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Poruka)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DatumSlanja)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.status)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TerminID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Termin)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(model => item.Poruka)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.DatumSlanja)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.status)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.TerminID)
+            </td>
+            <td>
+                @Html.DisplayFor(model => item.Termin)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.NotifikacijaId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.NotifikacijaId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.NotifikacijaId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

@@ -1,0 +1,52 @@
+@model HealthZone.Models.KorisnikNaListi
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>KorisnikNaListi</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Datum)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Datum)
+        </dd>
+    </dl>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.ListaID)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.ListaID)
+        </dd>
+    </dl>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Lista)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Lista)
+        </dd>
+    </dl>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.KorisnikID)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.KorisnikID)
+        </dd>
+    </dl>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Korisnik)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Korisnik)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.KorisnikNaListiID">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
