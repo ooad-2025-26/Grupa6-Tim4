@@ -5,7 +5,7 @@ namespace HealthZone.Models
 {
 	public class Termin
 	{
-        Termin() { }
+        public Termin() { }
         [Key]
         public int TerminId { get; set; }	
 		public DateTime Datum { get; set; }

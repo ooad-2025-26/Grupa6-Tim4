@@ -5,7 +5,7 @@ namespace HealthZone.Models
 {
 	public class Recenzija
 	{
-		Recenzija() { }
+		public Recenzija() { }
         [Key]
         public int RecenzijaId { get; set; }
 		public string Komentar { get; set; }

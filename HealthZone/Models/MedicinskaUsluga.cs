@@ -5,7 +5,7 @@ namespace HealthZone.Models
 {
 	public class MedicinskaUsluga
 	{
-		MedicinskaUsluga() { }
+		public MedicinskaUsluga() { }
         [Key]
         public int UslugaId { get; set; }
 		public string Naziv { get; set; }

@@ -5,7 +5,7 @@ namespace HealthZone.Models
 {
 	public class Notifikacija
     {
-		Notifikacija() { }
+		public Notifikacija() { }
         [Key]
         public int NotifikacijaId { get; set; }
 		public string Poruka { get; set; }

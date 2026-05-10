@@ -15,6 +15,7 @@ namespace HealthZone.Data
         public DbSet<MedicinskaUsluga> MedicinskaUsluga { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Korisnik>().ToTable("Korisnici");
             modelBuilder.Entity<Termin>().ToTable("Termini");
             modelBuilder.Entity<Nalaz>().ToTable("Nalazi");
@@ -58,7 +59,10 @@ namespace HealthZone.Data
                 .WithMany()
                 .HasForeignKey(k => k.KorisnikID)
                 .OnDelete(DeleteBehavior.NoAction);
-            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<MedicinskaUsluga>()
+    .Property(x => x.Cijena)
+    .HasPrecision(18, 2);
+
         }
     }
 }

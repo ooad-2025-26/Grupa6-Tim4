@@ -5,7 +5,7 @@ namespace HealthZone.Models
 {
 	public class Nalaz
     {
-        Nalaz() { }
+        public Nalaz() { }
         [Key]
         public int NalazId { get; set; }
         public string Opis { get; set; }

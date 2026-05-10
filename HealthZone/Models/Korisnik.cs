@@ -6,7 +6,7 @@ namespace HealthZone.Models
 
 public class Korisnik : IdentityUser
 {
-    Korisnik() { }
+    public Korisnik() { }
 	public string Ime { get; set; } 
     public string Prezime { get; set; } 
     public string BrojKartona { get; set; }
