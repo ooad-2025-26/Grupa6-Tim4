@@ -1,150 +1,168 @@
-
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using HealthZone.Models;
-using HealthZone.Data;
+using HealthZone.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
-public class ListaCekanjaController : Controller
+namespace HealthZone.Controllers
 {
-    private readonly ApplicationDbContext _context;
-
-    public ListaCekanjaController(ApplicationDbContext context)
+    public class ListaCekanjaController : Controller
     {
-        _context = context;
-    }
+        private readonly IListaCekanjaService _listaCekanjaService;
+        private readonly IKorisnikService _korisnikService;
 
-    // GET: LISTACEKANJAS
-    public async Task<IActionResult> Index()    
-    {
-        return View(await _context.ListaCekanja.ToListAsync());
-    }
-
-    // GET: LISTACEKANJAS/Details/5
-    public async Task<IActionResult> Details(int? listaid)
-    {
-        if (listaid == null)
+        public ListaCekanjaController(
+            IListaCekanjaService listaCekanjaService,
+            IKorisnikService korisnikService)
         {
-            return NotFound();
+            _listaCekanjaService = listaCekanjaService;
+            _korisnikService = korisnikService;
         }
 
-        var listacekanja = await _context.ListaCekanja
-            .FirstOrDefaultAsync(m => m.ListaId == listaid);
-        if (listacekanja == null)
+        // GET: ListaCekanja
+        public async Task<IActionResult> Index()
         {
-            return NotFound();
+            var liste = await _listaCekanjaService.GetAllAsync();
+            return View(liste);
         }
 
-        return View(listacekanja);
-    }
-
-    // GET: LISTACEKANJAS/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    // POST: LISTACEKANJAS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("ListaId,DoktorID,Doktor")] ListaCekanja listacekanja)
-    {
-        if (ModelState.IsValid)
+        // GET: ListaCekanja/Details/5
+        public async Task<IActionResult> Details(int? id)
         {
-            _context.Add(listacekanja);
-            await _context.SaveChangesAsync();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var listaCekanja = await _listaCekanjaService.GetByIdAsync(id.Value);
+            if (listaCekanja == null)
+            {
+                return NotFound();
+            }
+
+            return View(listaCekanja);
+        }
+
+        // GET: ListaCekanja/Create
+        public async Task<IActionResult> Create()
+        {
+            await PopuniDropDownListe();
+            return View();
+        }
+
+        // POST: ListaCekanja/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("ListaId,DoktorID")] ListaCekanja listaCekanja)
+        {
+            if (ModelState.IsValid)
+            {
+                await _listaCekanjaService.AddAsync(listaCekanja);
+                await _listaCekanjaService.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+
+            await PopuniDropDownListe(listaCekanja.DoktorID);
+            return View(listaCekanja);
+        }
+
+        // GET: ListaCekanja/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var listaCekanja = await _listaCekanjaService.GetByIdAsync(id.Value);
+            if (listaCekanja == null)
+            {
+                return NotFound();
+            }
+
+            await PopuniDropDownListe(listaCekanja.DoktorID);
+            return View(listaCekanja);
+        }
+
+        // POST: ListaCekanja/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("ListaId,DoktorID")] ListaCekanja listaCekanja)
+        {
+            if (id != listaCekanja.ListaId)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _listaCekanjaService.Update(listaCekanja);
+                    await _listaCekanjaService.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await ListaCekanjaExists(listaCekanja.ListaId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+
+            await PopuniDropDownListe(listaCekanja.DoktorID);
+            return View(listaCekanja);
+        }
+
+        // GET: ListaCekanja/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var listaCekanja = await _listaCekanjaService.GetByIdAsync(id.Value);
+            if (listaCekanja == null)
+            {
+                return NotFound();
+            }
+
+            return View(listaCekanja);
+        }
+
+        // POST: ListaCekanja/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var listaCekanja = await _listaCekanjaService.GetByIdAsync(id);
+            if (listaCekanja != null)
+            {
+                _listaCekanjaService.Delete(listaCekanja);
+                await _listaCekanjaService.SaveChangesAsync();
+            }
+
             return RedirectToAction(nameof(Index));
         }
-        return View(listacekanja);
-    }
 
-    // GET: LISTACEKANJAS/Edit/5
-    public async Task<IActionResult> Edit(int? listaid)
-    {
-        if (listaid == null)
+        // ========== PRIVATNE METODE ==========
+
+        private async Task<bool> ListaCekanjaExists(int id)
         {
-            return NotFound();
+            var lista = await _listaCekanjaService.GetByIdAsync(id);
+            return lista != null;
         }
 
-        var listacekanja = await _context.ListaCekanja.FindAsync(listaid);
-        if (listacekanja == null)
+        private async Task PopuniDropDownListe(string? selectedDoktorId = null)
         {
-            return NotFound();
+            var doktori = await _korisnikService.GetDoktoriAsync();
+            ViewData["DoktorID"] = new SelectList(doktori, "Id", "Ime", selectedDoktorId);
         }
-        return View(listacekanja);
-    }
-
-    // POST: LISTACEKANJAS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? listaid, [Bind("ListaId,DoktorID,Doktor")] ListaCekanja listacekanja)
-    {
-        if (listaid != listacekanja.ListaId)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(listacekanja);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ListaCekanjaExists(listacekanja.ListaId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        return View(listacekanja);
-    }
-
-    // GET: LISTACEKANJAS/Delete/5
-    public async Task<IActionResult> Delete(int? listaid)
-    {
-        if (listaid == null)
-        {
-            return NotFound();
-        }
-
-        var listacekanja = await _context.ListaCekanja
-            .FirstOrDefaultAsync(m => m.ListaId == listaid);
-        if (listacekanja == null)
-        {
-            return NotFound();
-        }
-
-        return View(listacekanja);
-    }
-
-    // POST: LISTACEKANJAS/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? listaid)
-    {
-        var listacekanja = await _context.ListaCekanja.FindAsync(listaid);
-        if (listacekanja != null)
-        {
-            _context.ListaCekanja.Remove(listacekanja);
-        }
-
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
-
-    private bool ListaCekanjaExists(int? listaid)
-    {
-        return _context.ListaCekanja.Any(e => e.ListaId == listaid);
     }
 }

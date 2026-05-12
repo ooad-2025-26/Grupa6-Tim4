@@ -1,29 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using HealthZone.Data;
+using HealthZone.Models;
+using HealthZone.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using HealthZone.Data;
-using HealthZone.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HealthZone.Controllers
 {
     public class ZahtjevZaOpremuController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IZahtjevZaOpremuService _zahtjevService;
+        private readonly IKorisnikService _korisnikService;
 
-        public ZahtjevZaOpremuController(ApplicationDbContext context)
+        public ZahtjevZaOpremuController(
+            IZahtjevZaOpremuService zahtjevService,
+            IKorisnikService korisnikService)
         {
-            _context = context;
+            _zahtjevService = zahtjevService;
+            _korisnikService = korisnikService;
         }
 
         // GET: ZahtjevZaOpremu
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.ZahtjevZaOpremu.Include(z => z.Doktor);
-            return View(await applicationDbContext.ToListAsync());
+            var zahtjevi = await _zahtjevService.GetAllAsync();
+            return View(zahtjevi);
+
         }
 
         // GET: ZahtjevZaOpremu/Details/5
@@ -34,9 +40,7 @@ namespace HealthZone.Controllers
                 return NotFound();
             }
 
-            var zahtjevZaOpremu = await _context.ZahtjevZaOpremu
-                .Include(z => z.Doktor)
-                .FirstOrDefaultAsync(m => m.ZahtjevId == id);
+            var zahtjevZaOpremu = await _zahtjevService.GetByIdAsync(id.Value);
             if (zahtjevZaOpremu == null)
             {
                 return NotFound();
@@ -46,9 +50,9 @@ namespace HealthZone.Controllers
         }
 
         // GET: ZahtjevZaOpremu/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id");
+            await PopuniDropDownListe();
             return View();
         }
 
@@ -61,11 +65,11 @@ namespace HealthZone.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(zahtjevZaOpremu);
-                await _context.SaveChangesAsync();
+                await _zahtjevService.AddAsync(zahtjevZaOpremu);
+                await _zahtjevService.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id", zahtjevZaOpremu.DoktorID);
+            await PopuniDropDownListe(zahtjevZaOpremu.DoktorID);
             return View(zahtjevZaOpremu);
         }
 
@@ -77,12 +81,12 @@ namespace HealthZone.Controllers
                 return NotFound();
             }
 
-            var zahtjevZaOpremu = await _context.ZahtjevZaOpremu.FindAsync(id);
+            var zahtjevZaOpremu = await _zahtjevService.GetByIdAsync(id.Value);
             if (zahtjevZaOpremu == null)
             {
                 return NotFound();
             }
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id", zahtjevZaOpremu.DoktorID);
+            await PopuniDropDownListe(zahtjevZaOpremu.DoktorID);
             return View(zahtjevZaOpremu);
         }
 
@@ -102,12 +106,12 @@ namespace HealthZone.Controllers
             {
                 try
                 {
-                    _context.Update(zahtjevZaOpremu);
-                    await _context.SaveChangesAsync();
+                    _zahtjevService.Update(zahtjevZaOpremu);
+                    await _zahtjevService.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ZahtjevZaOpremuExists(zahtjevZaOpremu.ZahtjevId))
+                    if (! await ZahtjevZaOpremuExists(zahtjevZaOpremu.ZahtjevId))
                     {
                         return NotFound();
                     }
@@ -118,7 +122,7 @@ namespace HealthZone.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id", zahtjevZaOpremu.DoktorID);
+            await PopuniDropDownListe(zahtjevZaOpremu.DoktorID);
             return View(zahtjevZaOpremu);
         }
 
@@ -130,9 +134,7 @@ namespace HealthZone.Controllers
                 return NotFound();
             }
 
-            var zahtjevZaOpremu = await _context.ZahtjevZaOpremu
-                .Include(z => z.Doktor)
-                .FirstOrDefaultAsync(m => m.ZahtjevId == id);
+            var zahtjevZaOpremu = await _zahtjevService.GetByIdAsync(id.Value);
             if (zahtjevZaOpremu == null)
             {
                 return NotFound();
@@ -146,19 +148,30 @@ namespace HealthZone.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var zahtjevZaOpremu = await _context.ZahtjevZaOpremu.FindAsync(id);
+            var zahtjevZaOpremu = await _zahtjevService.GetByIdAsync(id);
             if (zahtjevZaOpremu != null)
             {
-                _context.ZahtjevZaOpremu.Remove(zahtjevZaOpremu);
+                _zahtjevService.Delete(zahtjevZaOpremu);
+                await _zahtjevService.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool ZahtjevZaOpremuExists(int id)
+        private async Task<bool> ZahtjevZaOpremuExists(int id)
         {
-            return _context.ZahtjevZaOpremu.Any(e => e.ZahtjevId == id);
+            var zahtjev = await _zahtjevService.GetByIdAsync(id);
+            return zahtjev != null;
+        }
+
+
+        private async Task PopuniDropDownListe(string? selectedDoktorId = null)
+        {
+            // Dohvati doktore preko servisa
+            var doktori = await _korisnikService.GetDoktoriAsync();
+
+            // Popuni dropdown listu - prikazujemo Ime doktora
+            ViewData["DoktorID"] = new SelectList(doktori, "Id", "Ime", selectedDoktorId);
         }
     }
 }

@@ -1,22 +1,24 @@
 
+using HealthZone.Data;
+using HealthZone.Models;
+using HealthZone.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using HealthZone.Models;
-using HealthZone.Data;
 
 public class NotifikacijaController : Controller
 {
-    private readonly ApplicationDbContext _context;
+    private readonly INotifikacijaService _notifikacijaService;
 
-    public NotifikacijaController(ApplicationDbContext context)
+    public NotifikacijaController(INotifikacijaService notifikacijaService)
     {
-        _context = context;
+        _notifikacijaService = notifikacijaService;
     }
 
     // GET: NOTIFIKACIJAS
-    public async Task<IActionResult> Index()    
+    public async Task<IActionResult> Index()
     {
-        return View(await _context.Notifikacija.ToListAsync());
+        var notifikacije = await _notifikacijaService.GetAllAsync();
+        return View(notifikacije);
     }
 
     // GET: NOTIFIKACIJAS/Details/5
@@ -27,8 +29,7 @@ public class NotifikacijaController : Controller
             return NotFound();
         }
 
-        var notifikacija = await _context.Notifikacija
-            .FirstOrDefaultAsync(m => m.NotifikacijaId == notifikacijaid);
+        var notifikacija = await _notifikacijaService.GetByIdAsync(notifikacijaid.Value);
         if (notifikacija == null)
         {
             return NotFound();
@@ -52,8 +53,8 @@ public class NotifikacijaController : Controller
     {
         if (ModelState.IsValid)
         {
-            _context.Add(notifikacija);
-            await _context.SaveChangesAsync();
+            await _notifikacijaService.AddAsync(notifikacija);
+            await _notifikacijaService.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
         return View(notifikacija);
@@ -67,7 +68,7 @@ public class NotifikacijaController : Controller
             return NotFound();
         }
 
-        var notifikacija = await _context.Notifikacija.FindAsync(notifikacijaid);
+        var notifikacija = await _notifikacijaService.GetByIdAsync(notifikacijaid.Value);
         if (notifikacija == null)
         {
             return NotFound();
@@ -91,12 +92,12 @@ public class NotifikacijaController : Controller
         {
             try
             {
-                _context.Update(notifikacija);
-                await _context.SaveChangesAsync();
+                _notifikacijaService.Update(notifikacija);
+                await _notifikacijaService.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!NotifikacijaExists(notifikacija.NotifikacijaId))
+                if (! await NotifikacijaExists(notifikacija.NotifikacijaId))
                 {
                     return NotFound();
                 }
@@ -118,8 +119,7 @@ public class NotifikacijaController : Controller
             return NotFound();
         }
 
-        var notifikacija = await _context.Notifikacija
-            .FirstOrDefaultAsync(m => m.NotifikacijaId == notifikacijaid);
+        var notifikacija = await _notifikacijaService.GetByIdAsync(notifikacijaid.Value);
         if (notifikacija == null)
         {
             return NotFound();
@@ -133,18 +133,19 @@ public class NotifikacijaController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? notifikacijaid)
     {
-        var notifikacija = await _context.Notifikacija.FindAsync(notifikacijaid);
+        var notifikacija = await _notifikacijaService.GetByIdAsync(notifikacijaid.Value);
         if (notifikacija != null)
         {
-            _context.Notifikacija.Remove(notifikacija);
+            _notifikacijaService.Delete(notifikacija);
+            await _notifikacijaService.SaveChangesAsync();
         }
 
-        await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
 
-    private bool NotifikacijaExists(int? notifikacijaid)
+    private async Task<bool> NotifikacijaExists(int? notifikacijaid)
     {
-        return _context.Notifikacija.Any(e => e.NotifikacijaId == notifikacijaid);
+        var notifikacija = await _notifikacijaService.GetByIdAsync(notifikacijaid.Value);
+        return notifikacija != null;
     }
 }

@@ -1,150 +1,150 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HealthZone.Models;
-using HealthZone.Data;
+using HealthZone.Services;
 
-public class NalazController : Controller
+namespace HealthZone.Controllers
 {
-    private readonly ApplicationDbContext _context;
-
-    public NalazController(ApplicationDbContext context)
+    public class NalazController : Controller
     {
-        _context = context;
-    }
+        private readonly INalazService _nalazService;
 
-    // GET: NALAZS
-    public async Task<IActionResult> Index()    
-    {
-        return View(await _context.Nalaz.ToListAsync());
-    }
-
-    // GET: NALAZS/Details/5
-    public async Task<IActionResult> Details(int? nalazid)
-    {
-        if (nalazid == null)
+        public NalazController(INalazService nalazService)
         {
-            return NotFound();
+            _nalazService = nalazService;
         }
 
-        var nalaz = await _context.Nalaz
-            .FirstOrDefaultAsync(m => m.NalazId == nalazid);
-        if (nalaz == null)
+        // GET: Nalaz
+        public async Task<IActionResult> Index()
         {
-            return NotFound();
+            var nalazi = await _nalazService.GetAllAsync();
+            return View(nalazi);
         }
 
-        return View(nalaz);
-    }
-
-    // GET: NALAZS/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    // POST: NALAZS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("NalazId,Opis,Dijagnoza,Terapija,TerminID,Termin,PacijentID,Pacijent")] Nalaz nalaz)
-    {
-        if (ModelState.IsValid)
+        // GET: Nalaz/Details/5
+        public async Task<IActionResult> Details(int? id)
         {
-            _context.Add(nalaz);
-            await _context.SaveChangesAsync();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var nalaz = await _nalazService.GetByIdAsync(id.Value);
+            if (nalaz == null)
+            {
+                return NotFound();
+            }
+
+            return View(nalaz);
+        }
+
+        // GET: Nalaz/Create
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: Nalaz/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("NalazId,Opis,Dijagnoza,Terapija,TerminID,PacijentID")] Nalaz nalaz)
+        {
+            if (ModelState.IsValid)
+            {
+                await _nalazService.AddAsync(nalaz);
+                await _nalazService.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(nalaz);
+        }
+
+        // GET: Nalaz/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var nalaz = await _nalazService.GetByIdAsync(id.Value);
+            if (nalaz == null)
+            {
+                return NotFound();
+            }
+            return View(nalaz);
+        }
+
+        // POST: Nalaz/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("NalazId,Opis,Dijagnoza,Terapija,TerminID,PacijentID")] Nalaz nalaz)
+        {
+            if (id != nalaz.NalazId)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _nalazService.Update(nalaz);
+                    await _nalazService.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await NalazExists(nalaz.NalazId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(nalaz);
+        }
+
+        // GET: Nalaz/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var nalaz = await _nalazService.GetByIdAsync(id.Value);
+            if (nalaz == null)
+            {
+                return NotFound();
+            }
+
+            return View(nalaz);
+        }
+
+        // POST: Nalaz/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var nalaz = await _nalazService.GetByIdAsync(id);
+            if (nalaz != null)
+            {
+                _nalazService.Delete(nalaz);
+                await _nalazService.SaveChangesAsync();
+            }
+
             return RedirectToAction(nameof(Index));
         }
-        return View(nalaz);
-    }
 
-    // GET: NALAZS/Edit/5
-    public async Task<IActionResult> Edit(int? nalazid)
-    {
-        if (nalazid == null)
+        // ========== PRIVATNE METODE ==========
+
+        private async Task<bool> NalazExists(int id)
         {
-            return NotFound();
+            var nalaz = await _nalazService.GetByIdAsync(id);
+            return nalaz != null;
         }
-
-        var nalaz = await _context.Nalaz.FindAsync(nalazid);
-        if (nalaz == null)
-        {
-            return NotFound();
-        }
-        return View(nalaz);
-    }
-
-    // POST: NALAZS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? nalazid, [Bind("NalazId,Opis,Dijagnoza,Terapija,TerminID,Termin,PacijentID,Pacijent")] Nalaz nalaz)
-    {
-        if (nalazid != nalaz.NalazId)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(nalaz);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!NalazExists(nalaz.NalazId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        return View(nalaz);
-    }
-
-    // GET: NALAZS/Delete/5
-    public async Task<IActionResult> Delete(int? nalazid)
-    {
-        if (nalazid == null)
-        {
-            return NotFound();
-        }
-
-        var nalaz = await _context.Nalaz
-            .FirstOrDefaultAsync(m => m.NalazId == nalazid);
-        if (nalaz == null)
-        {
-            return NotFound();
-        }
-
-        return View(nalaz);
-    }
-
-    // POST: NALAZS/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? nalazid)
-    {
-        var nalaz = await _context.Nalaz.FindAsync(nalazid);
-        if (nalaz != null)
-        {
-            _context.Nalaz.Remove(nalaz);
-        }
-
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
-
-    private bool NalazExists(int? nalazid)
-    {
-        return _context.Nalaz.Any(e => e.NalazId == nalazid);
     }
 }

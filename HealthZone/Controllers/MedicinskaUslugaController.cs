@@ -1,150 +1,150 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HealthZone.Models;
-using HealthZone.Data;
+using HealthZone.Services;
 
-public class MedicinskaUslugaController : Controller
+namespace HealthZone.Controllers
 {
-    private readonly ApplicationDbContext _context;
-
-    public MedicinskaUslugaController(ApplicationDbContext context)
+    public class MedicinskaUslugaController : Controller
     {
-        _context = context;
-    }
+        private readonly IMedicinskaUslugaService _medicinskaUslugaService;
 
-    // GET: MEDICINSKAUSLUGAS
-    public async Task<IActionResult> Index()    
-    {
-        return View(await _context.MedicinskaUsluga.ToListAsync());
-    }
-
-    // GET: MEDICINSKAUSLUGAS/Details/5
-    public async Task<IActionResult> Details(int? uslugaid)
-    {
-        if (uslugaid == null)
+        public MedicinskaUslugaController(IMedicinskaUslugaService medicinskaUslugaService)
         {
-            return NotFound();
+            _medicinskaUslugaService = medicinskaUslugaService;
         }
 
-        var medicinskausluga = await _context.MedicinskaUsluga
-            .FirstOrDefaultAsync(m => m.UslugaId == uslugaid);
-        if (medicinskausluga == null)
+        // GET: MedicinskaUsluga
+        public async Task<IActionResult> Index()
         {
-            return NotFound();
+            var usluge = await _medicinskaUslugaService.GetAllAsync();
+            return View(usluge);
         }
 
-        return View(medicinskausluga);
-    }
-
-    // GET: MEDICINSKAUSLUGAS/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    // POST: MEDICINSKAUSLUGAS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("UslugaId,Naziv,Vrsta,Opis,Cijena")] MedicinskaUsluga medicinskausluga)
-    {
-        if (ModelState.IsValid)
+        // GET: MedicinskaUsluga/Details/5
+        public async Task<IActionResult> Details(int? id)
         {
-            _context.Add(medicinskausluga);
-            await _context.SaveChangesAsync();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var medicinskaUsluga = await _medicinskaUslugaService.GetByIdAsync(id.Value);
+            if (medicinskaUsluga == null)
+            {
+                return NotFound();
+            }
+
+            return View(medicinskaUsluga);
+        }
+
+        // GET: MedicinskaUsluga/Create
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: MedicinskaUsluga/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("UslugaId,Naziv,Vrsta,Opis,Cijena")] MedicinskaUsluga medicinskaUsluga)
+        {
+            if (ModelState.IsValid)
+            {
+                await _medicinskaUslugaService.AddAsync(medicinskaUsluga);
+                await _medicinskaUslugaService.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(medicinskaUsluga);
+        }
+
+        // GET: MedicinskaUsluga/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var medicinskaUsluga = await _medicinskaUslugaService.GetByIdAsync(id.Value);
+            if (medicinskaUsluga == null)
+            {
+                return NotFound();
+            }
+            return View(medicinskaUsluga);
+        }
+
+        // POST: MedicinskaUsluga/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("UslugaId,Naziv,Vrsta,Opis,Cijena")] MedicinskaUsluga medicinskaUsluga)
+        {
+            if (id != medicinskaUsluga.UslugaId)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _medicinskaUslugaService.Update(medicinskaUsluga);
+                    await _medicinskaUslugaService.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await MedicinskaUslugaExists(medicinskaUsluga.UslugaId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(medicinskaUsluga);
+        }
+
+        // GET: MedicinskaUsluga/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var medicinskaUsluga = await _medicinskaUslugaService.GetByIdAsync(id.Value);
+            if (medicinskaUsluga == null)
+            {
+                return NotFound();
+            }
+
+            return View(medicinskaUsluga);
+        }
+
+        // POST: MedicinskaUsluga/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var medicinskaUsluga = await _medicinskaUslugaService.GetByIdAsync(id);
+            if (medicinskaUsluga != null)
+            {
+                _medicinskaUslugaService.Delete(medicinskaUsluga);
+                await _medicinskaUslugaService.SaveChangesAsync();
+            }
+
             return RedirectToAction(nameof(Index));
         }
-        return View(medicinskausluga);
-    }
 
-    // GET: MEDICINSKAUSLUGAS/Edit/5
-    public async Task<IActionResult> Edit(int? uslugaid)
-    {
-        if (uslugaid == null)
+        // ========== PRIVATNE METODE ==========
+
+        private async Task<bool> MedicinskaUslugaExists(int id)
         {
-            return NotFound();
+            var usluga = await _medicinskaUslugaService.GetByIdAsync(id);
+            return usluga != null;
         }
-
-        var medicinskausluga = await _context.MedicinskaUsluga.FindAsync(uslugaid);
-        if (medicinskausluga == null)
-        {
-            return NotFound();
-        }
-        return View(medicinskausluga);
-    }
-
-    // POST: MEDICINSKAUSLUGAS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? uslugaid, [Bind("UslugaId,Naziv,Vrsta,Opis,Cijena")] MedicinskaUsluga medicinskausluga)
-    {
-        if (uslugaid != medicinskausluga.UslugaId)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(medicinskausluga);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!MedicinskaUslugaExists(medicinskausluga.UslugaId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        return View(medicinskausluga);
-    }
-
-    // GET: MEDICINSKAUSLUGAS/Delete/5
-    public async Task<IActionResult> Delete(int? uslugaid)
-    {
-        if (uslugaid == null)
-        {
-            return NotFound();
-        }
-
-        var medicinskausluga = await _context.MedicinskaUsluga
-            .FirstOrDefaultAsync(m => m.UslugaId == uslugaid);
-        if (medicinskausluga == null)
-        {
-            return NotFound();
-        }
-
-        return View(medicinskausluga);
-    }
-
-    // POST: MEDICINSKAUSLUGAS/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? uslugaid)
-    {
-        var medicinskausluga = await _context.MedicinskaUsluga.FindAsync(uslugaid);
-        if (medicinskausluga != null)
-        {
-            _context.MedicinskaUsluga.Remove(medicinskausluga);
-        }
-
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
-
-    private bool MedicinskaUslugaExists(int? uslugaid)
-    {
-        return _context.MedicinskaUsluga.Any(e => e.UslugaId == uslugaid);
     }
 }

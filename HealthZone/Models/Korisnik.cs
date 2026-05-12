@@ -10,8 +10,8 @@ public class Korisnik : IdentityUser
 	public string Ime { get; set; } 
     public string Prezime { get; set; } 
     public string BrojKartona { get; set; }
-    public Prioritet Prioritet { get; set; }
-    public Specijalizacija Specijalizacija { get; set; }    
+    public Prioritet? Prioritet { get; set; }
+    public Specijalizacija? Specijalizacija { get; set; }    
 
     }
 }

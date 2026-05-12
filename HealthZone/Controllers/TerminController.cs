@@ -7,23 +7,31 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HealthZone.Data;
 using HealthZone.Models;
+using HealthZone.Services;
 
 namespace HealthZone.Controllers
 {
     public class TerminController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ITerminService _terminService;
+        private readonly IKorisnikService _korisnikService;
+        private readonly IMedicinskaUslugaService _uslugaService;
 
-        public TerminController(ApplicationDbContext context)
+        public TerminController(
+            ITerminService terminService,
+            IKorisnikService korisnikService,
+            IMedicinskaUslugaService uslugaService)
         {
-            _context = context;
+            _terminService = terminService;
+            _korisnikService = korisnikService;
+            _uslugaService = uslugaService;
         }
 
         // GET: Termin
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Termin.Include(t => t.Doktor).Include(t => t.Pacijent).Include(t => t.Usluga);
-            return View(await applicationDbContext.ToListAsync());
+            var termini = await _terminService.GetAllAsync();
+            return View(termini);
         }
 
         // GET: Termin/Details/5
@@ -34,11 +42,7 @@ namespace HealthZone.Controllers
                 return NotFound();
             }
 
-            var termin = await _context.Termin
-                .Include(t => t.Doktor)
-                .Include(t => t.Pacijent)
-                .Include(t => t.Usluga)
-                .FirstOrDefaultAsync(m => m.TerminId == id);
+            var termin = await _terminService.GetByIdAsync(id.Value);
             if (termin == null)
             {
                 return NotFound();
@@ -48,30 +52,26 @@ namespace HealthZone.Controllers
         }
 
         // GET: Termin/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id");
-            ViewData["PacijentID"] = new SelectList(_context.Users, "Id", "Id");
-            ViewData["UslugaID"] = new SelectList(_context.MedicinskaUsluga, "UslugaId", "UslugaId");
+            await PopuniDropDownListe();
             return View();
         }
 
+
         // POST: Termin/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("TerminId,Datum,Vrijeme,Status,DoktorID,PacijentID,UslugaID")] Termin termin)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(termin);
-                await _context.SaveChangesAsync();
+                await _terminService.AddAsync(termin);
+                await _terminService.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id", termin.DoktorID);
-            ViewData["PacijentID"] = new SelectList(_context.Users, "Id", "Id", termin.PacijentID);
-            ViewData["UslugaID"] = new SelectList(_context.MedicinskaUsluga, "UslugaId", "UslugaId", termin.UslugaID);
+            await PopuniDropDownListe(termin.DoktorID, termin.UslugaID);
             return View(termin);
         }
 
@@ -83,20 +83,17 @@ namespace HealthZone.Controllers
                 return NotFound();
             }
 
-            var termin = await _context.Termin.FindAsync(id);
+            var termin = await _terminService.GetByIdAsync(id.Value);
             if (termin == null)
             {
                 return NotFound();
             }
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id", termin.DoktorID);
-            ViewData["PacijentID"] = new SelectList(_context.Users, "Id", "Id", termin.PacijentID);
-            ViewData["UslugaID"] = new SelectList(_context.MedicinskaUsluga, "UslugaId", "UslugaId", termin.UslugaID);
+            await PopuniDropDownListe(termin.DoktorID, termin.UslugaID);
             return View(termin);
         }
 
         // POST: Termin/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("TerminId,Datum,Vrijeme,Status,DoktorID,PacijentID,UslugaID")] Termin termin)
@@ -110,12 +107,12 @@ namespace HealthZone.Controllers
             {
                 try
                 {
-                    _context.Update(termin);
-                    await _context.SaveChangesAsync();
+                    _terminService.Update(termin);
+                    await _terminService.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TerminExists(termin.TerminId))
+                    if (!await TerminExists(termin.TerminId))
                     {
                         return NotFound();
                     }
@@ -126,9 +123,7 @@ namespace HealthZone.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id", termin.DoktorID);
-            ViewData["PacijentID"] = new SelectList(_context.Users, "Id", "Id", termin.PacijentID);
-            ViewData["UslugaID"] = new SelectList(_context.MedicinskaUsluga, "UslugaId", "UslugaId", termin.UslugaID);
+            await PopuniDropDownListe(termin.DoktorID, termin.UslugaID);
             return View(termin);
         }
 
@@ -140,11 +135,7 @@ namespace HealthZone.Controllers
                 return NotFound();
             }
 
-            var termin = await _context.Termin
-                .Include(t => t.Doktor)
-                .Include(t => t.Pacijent)
-                .Include(t => t.Usluga)
-                .FirstOrDefaultAsync(m => m.TerminId == id);
+            var termin = await _terminService.GetByIdAsync(id.Value);
             if (termin == null)
             {
                 return NotFound();
@@ -158,19 +149,34 @@ namespace HealthZone.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var termin = await _context.Termin.FindAsync(id);
+            var termin = await _terminService.GetByIdAsync(id);
             if (termin != null)
             {
-                _context.Termin.Remove(termin);
+                _terminService.Delete(termin);
+                await _terminService.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
+           
             return RedirectToAction(nameof(Index));
         }
 
-        private bool TerminExists(int id)
+        private async Task<bool> TerminExists(int id)
         {
-            return _context.Termin.Any(e => e.TerminId == id);
+            var termin = await _terminService.GetByIdAsync(id);
+            return termin != null;
+        }
+        private async Task PopuniDropDownListe(string? selectedDoktorId = null, int? selectedUslugaId = null)
+        {
+            // Dohvati podatke preko servisa (NE _context!)
+            var doktori = await _korisnikService.GetDoktoriAsync();
+            var pacijenti = await _korisnikService.GetPacijentiAsync();
+            var usluge = await _uslugaService.GetAllAsync();
+
+            // Popuni ViewData za dropdown liste
+            // Prikazujemo Ime i Prezime za doktore/pacijente, a za usluge Naziv
+            ViewData["DoktorID"] = new SelectList(doktori, "Id", "Ime", selectedDoktorId);
+            ViewData["PacijentID"] = new SelectList(pacijenti, "Id", "Ime");
+            ViewData["UslugaID"] = new SelectList(usluge, "UslugaId", "Naziv", selectedUslugaId);
         }
     }
 }

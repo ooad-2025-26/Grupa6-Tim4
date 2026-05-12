@@ -1,150 +1,179 @@
-
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using HealthZone.Models;
-using HealthZone.Data;
+using HealthZone.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
-public class KorisnikNaListiController : Controller
+namespace HealthZone.Controllers
 {
-    private readonly ApplicationDbContext _context;
-
-    public KorisnikNaListiController(ApplicationDbContext context)
+    public class KorisnikNaListiController : Controller
     {
-        _context = context;
-    }
+        private readonly IKorisnikNaListiService _korisnikNaListiService;
+        private readonly IKorisnikService _korisnikService;
+        private readonly IListaCekanjaService _listaCekanjaService;
 
-    // GET: KORISNIKNALISTIS
-    public async Task<IActionResult> Index()    
-    {
-        return View(await _context.KorisnikNaListi.ToListAsync());
-    }
-
-    // GET: KORISNIKNALISTIS/Details/5
-    public async Task<IActionResult> Details(int? korisniknalistiid)
-    {
-        if (korisniknalistiid == null)
+        public KorisnikNaListiController(
+            IKorisnikNaListiService korisnikNaListiService,
+            IKorisnikService korisnikService,
+            IListaCekanjaService listaCekanjaService)
         {
-            return NotFound();
+            _korisnikNaListiService = korisnikNaListiService;
+            _korisnikService = korisnikService;
+            _listaCekanjaService = listaCekanjaService;
         }
 
-        var korisniknalisti = await _context.KorisnikNaListi
-            .FirstOrDefaultAsync(m => m.KorisnikNaListiID == korisniknalistiid);
-        if (korisniknalisti == null)
+        // GET: KorisnikNaListi
+        public async Task<IActionResult> Index()
         {
-            return NotFound();
+            var stavke = await _korisnikNaListiService.GetAllAsync();
+            return View(stavke);
         }
 
-        return View(korisniknalisti);
-    }
-
-    // GET: KORISNIKNALISTIS/Create
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    // POST: KORISNIKNALISTIS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("KorisnikNaListiID,Datum,ListaID,Lista,KorisnikID,Korisnik")] KorisnikNaListi korisniknalisti)
-    {
-        if (ModelState.IsValid)
+        // GET: KorisnikNaListi/Details/5
+        public async Task<IActionResult> Details(int? id)
         {
-            _context.Add(korisniknalisti);
-            await _context.SaveChangesAsync();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var korisnikNaListi = await _korisnikNaListiService.GetByIdAsync(id.Value);
+            if (korisnikNaListi == null)
+            {
+                return NotFound();
+            }
+
+            return View(korisnikNaListi);
+        }
+
+        // GET: KorisnikNaListi/Create
+        public async Task<IActionResult> Create()
+        {
+            await PopuniDropDownListe();
+            return View();
+        }
+
+        // POST: KorisnikNaListi/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("KorisnikNaListiID,Datum,ListaID,KorisnikID")] KorisnikNaListi korisnikNaListi)
+        {
+            if (ModelState.IsValid)
+            {
+                if (korisnikNaListi.Datum == default)
+                {
+                    korisnikNaListi.Datum = DateTime.Now;
+                }
+
+                await _korisnikNaListiService.AddAsync(korisnikNaListi);
+                await _korisnikNaListiService.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+
+            await PopuniDropDownListe(korisnikNaListi.ListaID, korisnikNaListi.KorisnikID);
+            return View(korisnikNaListi);
+        }
+
+        // GET: KorisnikNaListi/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var korisnikNaListi = await _korisnikNaListiService.GetByIdAsync(id.Value);
+            if (korisnikNaListi == null)
+            {
+                return NotFound();
+            }
+
+            await PopuniDropDownListe(korisnikNaListi.ListaID, korisnikNaListi.KorisnikID);
+            return View(korisnikNaListi);
+        }
+
+        // POST: KorisnikNaListi/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("KorisnikNaListiID,Datum,ListaID,KorisnikID")] KorisnikNaListi korisnikNaListi)
+        {
+            if (id != korisnikNaListi.KorisnikNaListiID)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _korisnikNaListiService.Update(korisnikNaListi);
+                    await _korisnikNaListiService.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await KorisnikNaListiExists(korisnikNaListi.KorisnikNaListiID))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+
+            await PopuniDropDownListe(korisnikNaListi.ListaID, korisnikNaListi.KorisnikID);
+            return View(korisnikNaListi);
+        }
+
+        // GET: KorisnikNaListi/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var korisnikNaListi = await _korisnikNaListiService.GetByIdAsync(id.Value);
+            if (korisnikNaListi == null)
+            {
+                return NotFound();
+            }
+
+            return View(korisnikNaListi);
+        }
+
+        // POST: KorisnikNaListi/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var korisnikNaListi = await _korisnikNaListiService.GetByIdAsync(id);
+            if (korisnikNaListi != null)
+            {
+                _korisnikNaListiService.Delete(korisnikNaListi);
+                await _korisnikNaListiService.SaveChangesAsync();
+            }
+
             return RedirectToAction(nameof(Index));
         }
-        return View(korisniknalisti);
-    }
 
-    // GET: KORISNIKNALISTIS/Edit/5
-    public async Task<IActionResult> Edit(int? korisniknalistiid)
-    {
-        if (korisniknalistiid == null)
+        // ========== PRIVATNE METODE ==========
+
+        private async Task<bool> KorisnikNaListiExists(int id)
         {
-            return NotFound();
+            var stavka = await _korisnikNaListiService.GetByIdAsync(id);
+            return stavka != null;
         }
 
-        var korisniknalisti = await _context.KorisnikNaListi.FindAsync(korisniknalistiid);
-        if (korisniknalisti == null)
+        private async Task PopuniDropDownListe(int? selectedListaId = null, string? selectedKorisnikId = null)
         {
-            return NotFound();
+            var liste = await _listaCekanjaService.GetAllAsync();
+            var korisnici = await _korisnikService.GetAllAsync();
+
+            ViewData["ListaID"] = new SelectList(liste, "ListaId", "ListaId", selectedListaId);
+            ViewData["KorisnikID"] = new SelectList(korisnici, "Id", "Ime", selectedKorisnikId);
         }
-        return View(korisniknalisti);
-    }
-
-    // POST: KORISNIKNALISTIS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? korisniknalistiid, [Bind("KorisnikNaListiID,Datum,ListaID,Lista,KorisnikID,Korisnik")] KorisnikNaListi korisniknalisti)
-    {
-        if (korisniknalistiid != korisniknalisti.KorisnikNaListiID)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
-            {
-                _context.Update(korisniknalisti);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!KorisnikNaListiExists(korisniknalisti.KorisnikNaListiID))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return RedirectToAction(nameof(Index));
-        }
-        return View(korisniknalisti);
-    }
-
-    // GET: KORISNIKNALISTIS/Delete/5
-    public async Task<IActionResult> Delete(int? korisniknalistiid)
-    {
-        if (korisniknalistiid == null)
-        {
-            return NotFound();
-        }
-
-        var korisniknalisti = await _context.KorisnikNaListi
-            .FirstOrDefaultAsync(m => m.KorisnikNaListiID == korisniknalistiid);
-        if (korisniknalisti == null)
-        {
-            return NotFound();
-        }
-
-        return View(korisniknalisti);
-    }
-
-    // POST: KORISNIKNALISTIS/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int? korisniknalistiid)
-    {
-        var korisniknalisti = await _context.KorisnikNaListi.FindAsync(korisniknalistiid);
-        if (korisniknalisti != null)
-        {
-            _context.KorisnikNaListi.Remove(korisniknalisti);
-        }
-
-        await _context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
-    }
-
-    private bool KorisnikNaListiExists(int? korisniknalistiid)
-    {
-        return _context.KorisnikNaListi.Any(e => e.KorisnikNaListiID == korisniknalistiid);
     }
 }

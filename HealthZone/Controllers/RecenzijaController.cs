@@ -1,29 +1,34 @@
+using HealthZone.Data;
+using HealthZone.Models;
+using HealthZone.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using HealthZone.Data;
-using HealthZone.Models;
 
 namespace HealthZone.Controllers
 {
     public class RecenzijaController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IRecenzijaService _recenzijaService;
+        private readonly IKorisnikService _korisnikService;
 
-        public RecenzijaController(ApplicationDbContext context)
+        public RecenzijaController(
+            IRecenzijaService recenzijaService,
+            IKorisnikService korisnikService)
         {
-            _context = context;
+            _recenzijaService = recenzijaService;
+            _korisnikService = korisnikService;
         }
 
         // GET: Recenzija
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Recenzija.Include(r => r.Doktor).Include(r => r.Pacijent);
-            return View(await applicationDbContext.ToListAsync());
+            var recenzije = await _recenzijaService.GetAllAsync();
+            return View(recenzije);
         }
 
         // GET: Recenzija/Details/5
@@ -34,10 +39,7 @@ namespace HealthZone.Controllers
                 return NotFound();
             }
 
-            var recenzija = await _context.Recenzija
-                .Include(r => r.Doktor)
-                .Include(r => r.Pacijent)
-                .FirstOrDefaultAsync(m => m.RecenzijaId == id);
+            var recenzija = await _recenzijaService.GetByIdAsync(id.Value);
             if (recenzija == null)
             {
                 return NotFound();
@@ -47,10 +49,9 @@ namespace HealthZone.Controllers
         }
 
         // GET: Recenzija/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id");
-            ViewData["PacijentID"] = new SelectList(_context.Users, "Id", "Id");
+            await PopuniDropDownListe();
             return View();
         }
 
@@ -63,12 +64,11 @@ namespace HealthZone.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(recenzija);
-                await _context.SaveChangesAsync();
+               await _recenzijaService.AddAsync(recenzija);
+                await _recenzijaService.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id", recenzija.DoktorID);
-            ViewData["PacijentID"] = new SelectList(_context.Users, "Id", "Id", recenzija.PacijentID);
+            await PopuniDropDownListe(recenzija.DoktorID, recenzija.PacijentID);
             return View(recenzija);
         }
 
@@ -80,13 +80,12 @@ namespace HealthZone.Controllers
                 return NotFound();
             }
 
-            var recenzija = await _context.Recenzija.FindAsync(id);
+            var recenzija = await _recenzijaService.GetByIdAsync(id.Value);
             if (recenzija == null)
             {
                 return NotFound();
             }
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id", recenzija.DoktorID);
-            ViewData["PacijentID"] = new SelectList(_context.Users, "Id", "Id", recenzija.PacijentID);
+            await PopuniDropDownListe(recenzija.DoktorID, recenzija.PacijentID);
             return View(recenzija);
         }
 
@@ -106,12 +105,12 @@ namespace HealthZone.Controllers
             {
                 try
                 {
-                    _context.Update(recenzija);
-                    await _context.SaveChangesAsync();
+                    _recenzijaService.Update(recenzija);
+                    await _recenzijaService.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!RecenzijaExists(recenzija.RecenzijaId))
+                    if (! await RecenzijaExists(recenzija.RecenzijaId))
                     {
                         return NotFound();
                     }
@@ -122,8 +121,7 @@ namespace HealthZone.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DoktorID"] = new SelectList(_context.Users, "Id", "Id", recenzija.DoktorID);
-            ViewData["PacijentID"] = new SelectList(_context.Users, "Id", "Id", recenzija.PacijentID);
+            await PopuniDropDownListe(recenzija.DoktorID, recenzija.PacijentID);
             return View(recenzija);
         }
 
@@ -135,10 +133,8 @@ namespace HealthZone.Controllers
                 return NotFound();
             }
 
-            var recenzija = await _context.Recenzija
-                .Include(r => r.Doktor)
-                .Include(r => r.Pacijent)
-                .FirstOrDefaultAsync(m => m.RecenzijaId == id);
+            var recenzija = await _recenzijaService.GetByIdAsync(id.Value);
+
             if (recenzija == null)
             {
                 return NotFound();
@@ -152,19 +148,31 @@ namespace HealthZone.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var recenzija = await _context.Recenzija.FindAsync(id);
+            var recenzija = await _recenzijaService.GetByIdAsync(id);
             if (recenzija != null)
             {
-                _context.Recenzija.Remove(recenzija);
+                _recenzijaService.Delete(recenzija);
+                await _recenzijaService.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool RecenzijaExists(int id)
+        private async Task<bool> RecenzijaExists(int id)
         {
-            return _context.Recenzija.Any(e => e.RecenzijaId == id);
+            var recenzija = await _recenzijaService.GetByIdAsync(id);
+            return recenzija != null;
+        }
+
+        private async Task PopuniDropDownListe(string? selectedDoktorId = null, string? selectedPacijentId = null)
+        {
+            // Dohvati doktore i pacijente preko servisa
+            var doktori = await _korisnikService.GetDoktoriAsync();
+            var pacijenti = await _korisnikService.GetPacijentiAsync();
+
+            // Popuni dropdown liste - prikazujemo Ime (ili Ime + Prezime)
+            ViewData["DoktorID"] = new SelectList(doktori, "Id", "Ime", selectedDoktorId);
+            ViewData["PacijentID"] = new SelectList(pacijenti, "Id", "Ime", selectedPacijentId);
         }
     }
 }
