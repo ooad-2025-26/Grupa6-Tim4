@@ -18,7 +18,9 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 
 builder.Services.AddIdentity<Korisnik, IdentityRole>(options =>
-    options.SignIn.RequireConfirmedAccount = false)
+    { options.SignIn.RequireConfirmedAccount = false;
+      options.User.RequireUniqueEmail = true; 
+    })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
