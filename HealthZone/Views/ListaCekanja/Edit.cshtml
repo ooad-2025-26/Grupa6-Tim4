@@ -1,39 +1,51 @@
 @model HealthZone.Models.ListaCekanja
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Uredi listu čekanja";
+    var doktorItems = ViewData["DoktorID"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
 }
 
-<h1>Edit</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h4>ListaCekanja</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+    
+
+    <div class="hz-header">
+        <div class="hz-logo">📋</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Uredi listu čekanja</h1>
+            <p class="hz-subtitle">Ažurirajte podatke o listi čekanja u HealthZone sistemu.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <form asp-action="Edit" asp-controller="ListaCekanja" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
             <input type="hidden" asp-for="ListaId" />
-            <div class="form-group">
-                <label asp-for="DoktorID" class="control-label"></label>
-                <input asp-for="DoktorID" class="form-control" />
-                <span asp-validation-for="DoktorID" class="text-danger"></span>
+            <div class="hz-section-title">Podaci</div>
+
+            <div class="hz-grid">
+                <div class="hz-field hz-full">
+                    <label asp-for="DoktorID" class="hz-label">Doktor<span class="req">*</span></label>
+                    <select asp-for="DoktorID" class="hz-select" asp-items="doktorItems">
+                        <option value="">— Odaberite doktora —</option>
+                    </select>
+                    <span asp-validation-for="DoktorID" class="hz-error"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Doktor" class="control-label"></label>
-                <input asp-for="Doktor" class="form-control" />
-                <span asp-validation-for="Doktor" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <div class="hz-actions">
+                <a asp-action="Index" asp-controller="ListaCekanja" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-primary">Sačuvaj izmjene</button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

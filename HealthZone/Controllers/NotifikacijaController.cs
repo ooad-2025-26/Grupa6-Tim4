@@ -2,9 +2,10 @@
 using HealthZone.Data;
 using HealthZone.Models;
 using HealthZone.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+[Authorize(Roles = "Administrator")]
 public class NotifikacijaController : Controller
 {
     private readonly INotifikacijaService _notifikacijaService;
@@ -49,12 +50,11 @@ public class NotifikacijaController : Controller
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("NotifikacijaId,Poruka,DatumSlanja,status,TerminID,Termin")] Notifikacija notifikacija)
+    public async Task<IActionResult> Create([Bind("NotifikacijaId,Poruka,DatumSlanja,status,TerminID")] Notifikacija notifikacija)
     {
         if (ModelState.IsValid)
         {
             await _notifikacijaService.AddAsync(notifikacija);
-            await _notifikacijaService.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
         return View(notifikacija);

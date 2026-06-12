@@ -17,12 +17,18 @@ namespace HealthZone.Repositories
 
         public async Task<Recenzija?> GetByIdAsync(int id)
         {
-            return await _recenzije.FindAsync(id);
+            return await _recenzije
+                .Include(r => r.Pacijent)
+                .Include(r => r.Doktor)
+                .FirstOrDefaultAsync(r => r.RecenzijaId == id);
         }
 
         public async Task<IEnumerable<Recenzija>> GetAllAsync()
         {
-            return await _recenzije.ToListAsync();
+            return await _recenzije
+                .Include(r => r.Pacijent)
+                .Include(r => r.Doktor)
+                .ToListAsync();
         }
 
         public async Task AddAsync(Recenzija recenzija)

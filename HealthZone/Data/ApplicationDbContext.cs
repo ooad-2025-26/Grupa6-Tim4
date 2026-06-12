@@ -3,8 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using HealthZone.Models;
 namespace HealthZone.Data
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<Korisnik>(options)
+    public class ApplicationDbContext : IdentityDbContext<Korisnik>
     {
+        public ApplicationDbContext(
+            DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        { }
+  
         public DbSet<Termin> Termin { get; set; }
         public DbSet<Nalaz> Nalaz { get; set; }
         public DbSet<Recenzija> Recenzija { get; set; }
@@ -16,7 +21,7 @@ namespace HealthZone.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<Korisnik>().ToTable("Korisnici");
+           // modelBuilder.Entity<Korisnik>().ToTable("Korisnici");
             modelBuilder.Entity<Termin>().ToTable("Termini");
             modelBuilder.Entity<Nalaz>().ToTable("Nalazi");
             modelBuilder.Entity<Recenzija>().ToTable("Recenzije");

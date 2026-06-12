@@ -1,54 +1,74 @@
 @model HealthZone.Models.KorisnikNaListi
-
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Dodaj pacijenta na listu čekanja";
+    var korisnikItems = ViewData["KorisnikID"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    bool listaFiksna = (bool)(ViewData["ListaFiksna"] ?? false);
+    int? listaId = ViewData["ListaID"] as int?;
 }
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h1>Create</h1>
+<div class="hz-page hz-page-narrow">
+    <a asp-controller="KorisnikNaListi" asp-action="Index" class="hz-back">Nazad na listu čekanja</a>
+    <div class="hz-header">
+        <div class="hz-logo">🕐</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Dodaj pacijenta na listu čekanja</h1>
+            <p class="hz-subtitle">Pacijent će biti dodan prema prioritetu i vremenu prijave.</p>
+        </div>
+    </div>
+    <div class="hz-card">
+        <form asp-controller="KorisnikNaListi" asp-action="Create" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
 
-<h4>KorisnikNaListi</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @* Ako je doktor — lista je fiksna, šaljemo hidden field *@
+            @if (listaFiksna && listaId.HasValue)
+            {
+                <input type="hidden" name="ListaID" value="@listaId" />
+            }
+            else
+            {
+                @* Admin bira listu *@
+                var listaItems = ViewData["ListaID"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+                <div class="hz-field hz-full">
+                    <label asp-for="ListaID" class="hz-label">Lista čekanja<span class="req">*</span></label>
+                    <select asp-for="ListaID" class="hz-select" asp-items="listaItems">
+                        <option value="">— Odaberite listu —</option>
+                    </select>
+                    <span asp-validation-for="ListaID" class="hz-error"></span>
+                </div>
+            }
 
-            <div class="form-group">
-                <label asp-for="Datum" class="control-label"></label>
-                <input asp-for="Datum" class="form-control" />
-                <span asp-validation-for="Datum" class="text-danger"></span>
+            <div class="hz-section-title">Podaci</div>
+            <div class="hz-grid">
+                <div class="hz-field hz-full">
+                    <label asp-for="KorisnikID" class="hz-label">Pacijent<span class="req">*</span></label>
+                    <select asp-for="KorisnikID" class="hz-select" asp-items="korisnikItems">
+                        <option value="">— Odaberite pacijenta —</option>
+                    </select>
+                    <span asp-validation-for="KorisnikID" class="hz-error"></span>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="ListaID" class="control-label"></label>
-                <input asp-for="ListaID" class="form-control" />
-                <span asp-validation-for="ListaID" class="text-danger"></span>
+            <div style="background:#e6f1fb;border:1px solid #b3d4f5;border-radius:10px;padding:14px 18px;margin-top:8px;display:flex;gap:12px;align-items:flex-start">
+                <div style="font-size:20px;line-height:1">ℹ️</div>
+                <div style="font-size:13px;color:#185fa5;line-height:1.5">
+                    <b>Automatsko sortiranje:</b> Pacijent će biti dodan na listu u skladu s algoritmom prioriteta.
+                    Pacijenti s višim prioritetom (Visok &gt; Srednji &gt; Nizak) idu prvi,
+                    a za isti prioritet vrijedi redoslijed prijave.
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Lista" class="control-label"></label>
-                <input asp-for="Lista" class="form-control" />
-                <span asp-validation-for="Lista" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="KorisnikID" class="control-label"></label>
-                <input asp-for="KorisnikID" class="form-control" />
-                <span asp-validation-for="KorisnikID" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Korisnik" class="control-label"></label>
-                <input asp-for="Korisnik" class="form-control" />
-                <span asp-validation-for="Korisnik" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div class="hz-actions">
+                <a asp-controller="KorisnikNaListi" asp-action="Index" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-primary">Dodaj na listu</button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

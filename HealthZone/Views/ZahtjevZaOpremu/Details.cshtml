@@ -1,60 +1,121 @@
-﻿@model HealthZone.Models.ZahtjevZaOpremu
+@model HealthZone.Models.ZahtjevZaOpremu
+@using HealthZone.Models
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalji zahtjeva";
 }
 
-<h1>Details</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<div>
-    <h4>ZahtjevZaOpremu</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Naziv)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Naziv)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Opis)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Opis)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Doktor)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Doktor.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.VrstaZahtjeva)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.VrstaZahtjeva)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Kategorija)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Kategorija)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Hitnost)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Hitnost)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.ZahtjevId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+    <div class="hz-header">
+        <div class="hz-logo">🛠️</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Detalji zahtjeva</h1>
+            <p class="hz-subtitle">Pregled svih informacija za odabrani zahtjev.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <div class="hz-section-title">Podaci o zahtjevu</div>
+        <div class="hz-grid">
+
+            <div class="hz-field">
+                <label class="hz-label">Naziv</label>
+                <div class="hz-input hz-readonly">@Model.Naziv</div>
+            </div>
+
+            <div class="hz-field">
+                <label class="hz-label">Doktor</label>
+                <div class="hz-input hz-readonly">
+                    @(Model.Doktor != null ? $"{Model.Doktor.Ime} {Model.Doktor.Prezime}" : Model.DoktorID)
+                </div>
+            </div>
+
+            <div class="hz-field">
+                <label class="hz-label">Vrsta zahtjeva</label>
+                <div class="hz-input hz-readonly">@Model.VrstaZahtjeva</div>
+            </div>
+
+            <div class="hz-field">
+                <label class="hz-label">Kategorija</label>
+                <div class="hz-input hz-readonly">@Model.Kategorija</div>
+            </div>
+
+            <div class="hz-field">
+                <label class="hz-label">Hitnost</label>
+                <div class="hz-input hz-readonly">
+                    @{
+                        string hitnostClass = Model.Hitnost switch
+                        {
+                            Hitnost.Nizak => "hz-badge-neutral",
+                            Hitnost.Srednji => "hz-badge-warning",
+                            Hitnost.Visok => "hz-badge-danger",
+                            Hitnost.Hitno => "hz-badge-danger",
+                            _ => "hz-badge-neutral"
+                        };
+                    }
+                    <span class="hz-badge @hitnostClass">@Model.Hitnost</span>
+                </div>
+            </div>
+
+            <div class="hz-field">
+                <label class="hz-label">Status</label>
+                <div class="hz-input hz-readonly">
+                    @{
+                        string statusClass = Model.Status switch
+                        {
+                            Status.Aktivan => "hz-badge-info",
+                            Status.NaCekanju => "hz-badge-warning",
+                            Status.Potvrdjen => "hz-badge-success",
+                            Status.Otkazan => "hz-badge-danger",
+                            _ => "hz-badge-neutral"
+                        };
+                    }
+                    <span class="hz-badge @statusClass">@Model.Status</span>
+                </div>
+            </div>
+
+            <div class="hz-field hz-full">
+                <label class="hz-label">Opis</label>
+                <div class="hz-input hz-readonly" style="min-height:60px;white-space:pre-wrap">@Model.Opis</div>
+            </div>
+
+        </div>
+
+        <div class="hz-actions hz-actions-between">
+            <a asp-action="Index" class="hz-btn hz-btn-ghost">Nazad</a>
+
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                @if (User.IsInRole("Doktor") && Model.Status == Status.NaCekanju
+                                && Model.DoktorID == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.ZahtjevId" class="hz-btn hz-btn-ghost">Uredi</a>
+                    <a asp-action="Delete" asp-route-id="@Model.ZahtjevId" class="hz-btn hz-btn-danger">Obriši</a>
+                }
+
+                @if (User.IsInRole("Administrator") && Model.Status == Status.NaCekanju)
+                {
+                    <form asp-action="Odobri" method="post" style="display:inline">
+                        <input type="hidden" name="id" value="@Model.ZahtjevId" />
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="hz-btn hz-btn-success">✔ Odobri</button>
+                    </form>
+                    <form asp-action="Odbij" method="post" style="display:inline">
+                        <input type="hidden" name="id" value="@Model.ZahtjevId" />
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="hz-btn hz-btn-danger">✘ Odbij</button>
+                    </form>
+                }
+
+                @if (Model.Status == Status.Potvrdjen)
+                {
+                    <a asp-action="Dokumentacija" asp-route-id="@Model.ZahtjevId" class="hz-btn hz-btn-primary" target="_blank">🖨️ Generiši dokumentaciju</a>
+                }
+            </div>
+        </div>
+    </div>
 </div>

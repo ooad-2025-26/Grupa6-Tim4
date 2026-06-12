@@ -1,0 +1,145 @@
+﻿@model IEnumerable<HealthZone.Models.Recenzija>
+
+@{
+    ViewData["Title"] = "Moje recenzije";
+    var ocjene = ViewBag.Ocjene;
+    double ljubaznost = ocjene.Ljubaznost;
+    double profesionalnost = ocjene.Profesionalnost;
+    double usluga = ocjene.Usluga;
+    double ukupno = ocjene.Ukupno;
+    int zvjezdice = (int)Math.Round(ukupno);
+}
+
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+    .stat-box {
+        background: #fff;
+        border: 1px solid #e0ede8;
+        border-radius: 14px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .stat-box .broj {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--hz-accent, #00a86b);
+        }
+
+        .stat-box .naziv {
+            font-size: 12px;
+            color: #7a9a8a;
+            font-weight: 600;
+        }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+        margin: 20px 0;
+    }
+
+    .rec-card {
+        background: #fff;
+        border: 1px solid #e8f0ed;
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 12px;
+    }
+
+    .rec-stars {
+        color: #f5a623;
+        font-size: 18px;
+    }
+
+    .rec-ocjene {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 12px;
+        color: #5a7a6a;
+        margin: 6px 0;
+    }
+
+    .rec-komentar {
+        font-style: italic;
+        font-size: 13px;
+        color: #3a5a4a;
+        border-left: 3px solid #d0ede3;
+        padding-left: 10px;
+        margin-top: 8px;
+    }
+
+    .rec-pacijent {
+        font-size: 12px;
+        color: #8aaa99;
+        margin-top: 4px;
+    }
+</style>
+
+<div class="hz-page">
+    <div class="hz-header">
+        <div class="hz-logo">⭐</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Moje recenzije</h1>
+            <p class="hz-subtitle">Pregled ocjena i komentara vaših pacijenata.</p>
+        </div>
+    </div>
+
+    <div class="stat-grid">
+        <div class="stat-box">
+            <div class="broj">@ukupno</div>
+            <div style="color:#f5a623;font-size:18px">@string.Concat(Enumerable.Repeat("★", zvjezdice))@string.Concat(Enumerable.Repeat("☆", 5 - zvjezdice))</div>
+            <div class="naziv">Ukupna ocjena</div>
+        </div>
+        <div class="stat-box">
+            <div class="broj">@ljubaznost</div>
+            <div class="naziv">Ljubaznost</div>
+        </div>
+        <div class="stat-box">
+            <div class="broj">@profesionalnost</div>
+            <div class="naziv">Profesionalnost</div>
+        </div>
+        <div class="stat-box">
+            <div class="broj">@usluga</div>
+            <div class="naziv">Kvalitet usluge</div>
+        </div>
+        <div class="stat-box">
+            <div class="broj">@Model.Count()</div>
+            <div class="naziv">Broj recenzija</div>
+        </div>
+    </div>
+
+    <div class="hz-section-title" style="margin-top:24px">Komentari pacijenata</div>
+
+    @if (Model.Any())
+    {
+        @foreach (var r in Model)
+        {
+            double uk = Math.Round((r.OcjenaLjubaznosti + r.OcjenaProfesionalnosti + r.OcjenaUsluge) / 3.0, 1);
+            int zv = (int)Math.Round(uk);
+            <div class="rec-card">
+                <div class="rec-stars">@string.Concat(Enumerable.Repeat("★", zv))@string.Concat(Enumerable.Repeat("☆", 5 - zv)) <span style="font-size:13px;color:#3a5a4a;font-weight:700">@uk/5</span></div>
+                <div class="rec-ocjene">
+                    <span>Ljubaznost: @r.OcjenaLjubaznosti</span>
+                    <span>Profesionalnost: @r.OcjenaProfesionalnosti</span>
+                    <span>Usluga: @r.OcjenaUsluge</span>
+                </div>
+                @if (!string.IsNullOrEmpty(r.Komentar))
+                {
+                    <div class="rec-komentar">"@r.Komentar"</div>
+                }
+                <div class="rec-pacijent">— @r.Pacijent?.Ime @r.Pacijent?.Prezime</div>
+            </div>
+        }
+    }
+    else
+    {
+        <p style="color:#8aaa99;padding:20px 0">Još nema recenzija.</p>
+    }
+</div>

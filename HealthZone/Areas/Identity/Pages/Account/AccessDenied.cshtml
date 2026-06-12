@@ -1,0 +1,36 @@
+﻿@page
+@model AccessDeniedModel
+@{
+    ViewData["Title"] = "Pristup odbijen";
+}
+
+<div style="min-height: 60vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
+    <div style="text-align: center; max-width: 480px;">
+
+        <div style="font-size: 72px; margin-bottom: 16px;">🔒</div>
+
+        <h1 style="font-size: 2rem; font-weight: 700; color: #0F2E2E; margin-bottom: 12px;">
+            Pristup odbijen
+        </h1>
+
+        <p style="color: #5B7B7B; font-size: 1.05rem; margin-bottom: 32px; line-height: 1.6;">
+            Nemate dozvolu za pristup ovoj stranici.<br />
+            Ako smatrate da je ovo greška, kontaktirajte administratora.
+        </p>
+
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a asp-controller="Home" asp-action="Index"
+               style="background: #0BA5A4; color: #fff; padding: 12px 28px; border-radius: 8px;
+                      text-decoration: none; font-weight: 600; font-size: 0.95rem;">
+                ← Početna stranica
+            </a>
+            <a asp-controller="Account" asp-action="Login"
+               style="background: #fff; color: #0BA5A4; padding: 12px 28px; border-radius: 8px;
+                      text-decoration: none; font-weight: 600; font-size: 0.95rem;
+                      border: 2px solid #0BA5A4;">
+                Prijavi se
+            </a>
+        </div>
+
+    </div>
+</div>

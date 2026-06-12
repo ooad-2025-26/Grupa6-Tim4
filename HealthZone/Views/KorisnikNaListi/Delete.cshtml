@@ -1,58 +1,104 @@
 @model HealthZone.Models.KorisnikNaListi
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Ukloni pacijenta s liste čekanja";
+    var priStr = Model.Korisnik?.Prioritet?.ToString() ?? "";
+    var priClass = priStr switch
+    {
+        "Nizak" => "hz-badge hz-badge-pri-nizak",
+        "Srednji" => "hz-badge hz-badge-pri-srednji",
+        "Visok" => "hz-badge hz-badge-pri-visok",
+        _ => "hz-badge"
+    };
 }
 
-<h1>Delete</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>HealthZone.Models.KorisnikNaListi</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Datum)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Datum)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ListaID)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ListaID)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Lista)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Lista)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.KorisnikID)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.KorisnikID)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Korisnik)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Korisnik)
-        </dd>
-    </dl>
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="KorisnikNaListiID" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+<style>
+    .hz-badge-pri-nizak {
+        background: #eaf3de;
+        color: #3b6d11;
+    }
+
+    .hz-badge-pri-srednji {
+        background: #faeeda;
+        color: #854f0b;
+    }
+
+    .hz-badge-pri-visok {
+        background: #fcebeb;
+        color: #a32d2d;
+    }
+</style>
+
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+    <div class="hz-header">
+        <div class="hz-logo">🕐</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Ukloni pacijenta s liste</h1>
+            <p class="hz-subtitle">Potvrdite uklanjanje pacijenta s liste čekanja. Ova akcija se ne može poništiti.</p>
+        </div>
+    </div>
+
+    <div class="hz-warning-panel">
+        <div class="ic">⚠️</div>
+        <div>
+            <h4>Uklanjanje s liste čekanja</h4>
+            <p>Pacijent će biti trajno uklonjen s liste čekanja #@Model.ListaID. Ukoliko se oslobodi termin, pacijent više neće automatski biti obaviješten.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <div class="hz-section-title">Podaci o pacijentu</div>
+        <div class="hz-grid">
+            <div class="hz-field">
+                <label class="hz-label">Ime i prezime</label>
+                <div class="hz-input hz-readonly">@Model.Korisnik?.Ime @Model.Korisnik?.Prezime</div>
+            </div>
+            <div class="hz-field">
+                <label class="hz-label">Email</label>
+                <div class="hz-input hz-readonly">@(Model.Korisnik?.Email ?? "—")</div>
+            </div>
+            <div class="hz-field">
+                <label class="hz-label">Broj kartona</label>
+                <div class="hz-input hz-readonly" style="font-family:ui-monospace,monospace;font-size:13px">
+                    @(Model.Korisnik?.BrojKartona ?? "—")
+                </div>
+            </div>
+            <div class="hz-field">
+                <label class="hz-label">Prioritet</label>
+                <div class="hz-input hz-readonly">
+                    @if (!string.IsNullOrEmpty(priStr))
+                    {
+                        <span class="@priClass">@priStr</span>
+                    }
+                    else
+                    {
+                        @:—
+                    }
+                </div>
+            </div>
+            <div class="hz-field">
+                <label class="hz-label">Lista čekanja</label>
+                <div class="hz-input hz-readonly" style="font-family:ui-monospace,monospace;color:#185fa5;font-weight:600">
+                    #@Model.ListaID
+                </div>
+            </div>
+            <div class="hz-field">
+                <label class="hz-label">Datum prijave</label>
+                <div class="hz-input hz-readonly">@Model.Datum.ToString("dd.MM.yyyy HH:mm")</div>
+            </div>
+        </div>
+
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="KorisnikNaListiID" />
+            <div class="hz-actions hz-actions-between">
+                <a asp-action="Index" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-danger">Da, ukloni s liste</button>
+            </div>
+        </form>
+    </div>
 </div>

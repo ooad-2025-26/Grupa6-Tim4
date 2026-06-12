@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Termin otkazan";
+}
+
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<div class="hz-page">
+
+    <div class="hz-header">
+        <div class="hz-logo">❌</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Termin otkazan</h1>
+            <p class="hz-subtitle">
+                Vaš termin je uspješno otkazan u HealthZone sistemu.
+            </p>
+        </div>
+    </div>
+
+    <div class="hz-empty" style="margin-top:40px;">
+        <span class="icon">📅</span>
+
+        <h3 style="margin:0 0 10px;color:var(--hz-danger,#dc3545)">
+            Termin je uspješno otkazan
+        </h3>
+
+        <p style="margin:0 0 20px;">
+            Evidencija termina je ažurirana i termin više nije aktivan.
+        </p>
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="hz-btn hz-btn-primary">
+            Povratak na početnu stranicu
+        </a>
+    </div>
+
+</div>

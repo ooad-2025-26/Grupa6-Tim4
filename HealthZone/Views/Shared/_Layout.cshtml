@@ -1,57 +1,524 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@{
+    object controllerObj = ViewContext.RouteData.Values["Controller"];
+    string controller = controllerObj != null ? controllerObj.ToString() : string.Empty;
+    object actionObj = ViewContext.RouteData.Values["Action"];
+    string action = actionObj != null ? actionObj.ToString() : string.Empty;
+}
+<!DOCTYPE html>
+<html lang="sr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - HealthZone</title>
-    <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/HealthZone.styles.css" asp-append-version="true" />
+    <style>
+        :root {
+            --hz-primary: #0BA5A4;
+            --hz-primary-dark: #0E7C7B;
+            --hz-bg: #F4FAFA;
+            --hz-text: #0F2E2E;
+            --hz-muted: #5B7B7B;
+            --hz-border: #D6ECEC;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            background: var(--hz-bg);
+            color: var(--hz-text);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        /* ── Header ── */
+        .hz-header {
+            background: #fff;
+            border-bottom: 1px solid var(--hz-border);
+            box-shadow: 0 1px 3px rgba(11,165,164,0.05);
+        }
+
+        .hz-header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .hz-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--hz-primary-dark);
+            text-decoration: none !important;
+        }
+
+        .hz-brand-logo {
+            width: 34px;
+            height: 34px;
+            background: var(--hz-primary);
+            color: #fff;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* ── Nav ── */
+        .hz-nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            flex: 1;
+        }
+
+        .hz-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+            .hz-nav a, .hz-nav-right a {
+                display: inline-block;
+                padding: 8px 14px;
+                border-radius: 8px;
+                color: var(--hz-text) !important;
+                text-decoration: none !important;
+                font-weight: 500;
+                font-size: 0.95rem;
+                transition: background .15s, color .15s;
+            }
+
+                .hz-nav a:hover, .hz-nav-right a:hover {
+                    background: var(--hz-bg);
+                    color: var(--hz-primary-dark) !important;
+                }
+
+                .hz-nav a.active {
+                    background: var(--hz-bg);
+                    color: var(--hz-primary-dark) !important;
+                }
+
+        .hz-nav-cta {
+            background: var(--hz-primary) !important;
+            color: #fff !important;
+            padding: 8px 18px !important;
+            border-radius: 8px;
+        }
+
+            .hz-nav-cta:hover {
+                background: var(--hz-primary-dark) !important;
+                color: #fff !important;
+            }
+
+        /* ── Nav dropdown (Upravljanje) ── */
+        .hz-dropdown-parent {
+            position: relative;
+        }
+
+        .hz-nav-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: #fff;
+            border: 1px solid var(--hz-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            min-width: 220px;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+            .hz-nav-dropdown.open {
+                display: block;
+                animation: fadeDown .15s ease;
+            }
+
+            .hz-nav-dropdown a {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 11px 16px;
+                font-size: 0.9rem;
+                color: var(--hz-text) !important;
+                text-decoration: none !important;
+                transition: background .15s;
+                white-space: nowrap;
+            }
+
+                .hz-nav-dropdown a:hover {
+                    background: var(--hz-bg);
+                    color: var(--hz-primary-dark) !important;
+                }
+
+        .hz-nav-dropdown-divider {
+            height: 1px;
+            background: var(--hz-border);
+            margin: 4px 0;
+        }
+
+        /* ── User menu dropdown ── */
+        .hz-user-menu {
+            position: relative;
+        }
+
+        .hz-user-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: 2px solid var(--hz-primary);
+            border-radius: 999px;
+            padding: 5px 12px 5px 5px;
+            cursor: pointer;
+            color: var(--hz-text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background .15s;
+        }
+
+            .hz-user-btn:hover {
+                background: var(--hz-bg);
+            }
+
+        .hz-user-avatar {
+            width: 28px;
+            height: 28px;
+            background: var(--hz-primary);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .hz-user-name {
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .hz-chevron {
+            font-size: 11px;
+            color: var(--hz-muted);
+        }
+
+        .hz-user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            background: #fff;
+            border: 1px solid var(--hz-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            min-width: 210px;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+            .hz-user-dropdown.open {
+                display: block;
+                animation: fadeDown .15s ease;
+            }
+
+        @@keyframes fadeDown {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hz-user-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            color: var(--hz-text) !important;
+            text-decoration: none !important;
+            transition: background .15s;
+        }
+
+            .hz-user-dropdown a:hover {
+                background: var(--hz-bg);
+            }
+
+        .hz-dropdown-divider {
+            height: 1px;
+            background: var(--hz-border);
+            margin: 4px 0;
+        }
+
+        .hz-dropdown-logout {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            color: #dc2626;
+            background: none;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+            .hz-dropdown-logout:hover {
+                background: #fff5f5;
+            }
+
+        /* ── Footer ── */
+        .hz-footer {
+            background: #fff;
+            border-top: 1px solid var(--hz-border);
+            color: var(--hz-muted);
+            padding: 18px 24px;
+        }
+
+        .hz-footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .hz-footer a {
+            color: var(--hz-primary-dark);
+            text-decoration: none;
+        }
+
+        /* ── Mobile ── */
+        @@media (max-width: 768px) {
+            .hz-header-inner {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .hz-nav {
+                flex-wrap: wrap;
+                width: 100%;
+                order: 3;
+            }
+
+            .hz-nav-right {
+                order: 2;
+                margin-left: auto;
+            }
+
+            .hz-user-name {
+                display: none;
+            }
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">HealthZone</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Početna</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Termin" asp-action="Index">Termini</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Nalaz" asp-action="Index">Nalazi</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privatnost</a>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <header class="hz-header">
+        <div class="hz-header-inner">
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - HealthZone - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privatnost</a>
+            <!-- Brand -->
+            <a class="hz-brand" asp-controller="Home" asp-action="Index">
+                <span class="hz-brand-logo">✚</span>
+                HealthZone
+            </a>
+
+            <!-- Nav -->
+            <ul class="hz-nav">
+    <li>
+        <a class="@(controller == "Home" && action == "Index" ? "active" : "")"
+           asp-controller="Home" asp-action="Index">Početna</a>
+    </li>
+    <li>
+        <a class="@(controller == "MedicinskaUsluga" ? "active" : "")"
+           asp-controller="MedicinskaUsluga" asp-action="Index">Usluge</a>
+    </li>
+    <li>
+        <a class="@(controller == "Home" && action == "MedicinskoOsoblje" ? "active" : "")"
+           asp-controller="Home" asp-action="MedicinskoOsoblje">Osoblje</a>
+    </li>
+
+    @if (User.Identity != null && User.Identity.IsAuthenticated && !(User.Identity.Name ?? "").Contains("\\"))
+    {
+        <li class="hz-dropdown-parent">
+            <a href="#"
+               class="@(controller is "Termin" or "Nalaz" or "Korisnik" or "ZahtjevZaOpremu" or "ListaCekanja" or "KorisnikNaListi" ? "active" : "")"
+               onclick="toggleNavDropdown(event, 'navDropdown')">
+                Upravljanje <span class="hz-chevron">&#9662;</span>
+            </a>
+            <div class="hz-nav-dropdown" id="navDropdown">
+                <a asp-controller="Termin" asp-action="Index">
+                    📅 Termini
+                </a>
+                @if (User.IsInRole("Doktor") || User.IsInRole("Pacijent") || User.IsInRole("MedicinskaSestra") || User.IsInRole("Administrator"))
+                {
+                    <a asp-controller="Nalaz" asp-action="Index">
+                        📋 Nalazi
+                    </a>
+                }
+                @if (User.IsInRole("Doktor"))
+                {
+                    <div class="hz-nav-dropdown-divider"></div>
+                    <a asp-controller="Termin" asp-action="MojiPacijenti">
+                        👥 Moji pacijenti
+                    </a>
+                    <a asp-controller="ListaCekanja" asp-action="Index">
+                        🕐 Lista čekanja
+                    </a>
+                }
+                @if (User.IsInRole("Administrator"))
+                {
+                    <div class="hz-nav-dropdown-divider"></div>
+                    <a asp-controller="ListaCekanja" asp-action="Index">
+                        🕐 Lista čekanja
+                    </a>
+                }
+                @if (User.IsInRole("Administrator") || User.IsInRole("Doktor"))
+                {
+                    <div class="hz-nav-dropdown-divider"></div>
+                    <a asp-controller="ZahtjevZaOpremu" asp-action="Index">
+                        🔧 Zahtjevi za opremu
+                    </a>
+                }
+                @if (User.IsInRole("Administrator"))
+                {
+                    <div class="hz-nav-dropdown-divider"></div>
+                    <a asp-controller="Korisnik" asp-action="Index">
+                        👤 Korisnici
+                    </a>
+                }
+            </div>
+        </li>
+    }
+</ul>
+
+            <!-- Nav right: user menu / login -->
+            <ul class="hz-nav-right">
+               @if (User.Identity != null && User.Identity.IsAuthenticated && !(User.Identity.Name ?? "").Contains("\\"))
+                {
+                    <li class="hz-user-menu">
+                        <button class="hz-user-btn" onclick="toggleUserMenu(event)" type="button">
+                            <span class="hz-user-avatar">
+                                @{
+                                    string userName = User.Identity.Name ?? "";
+                                    // Filtriraj Windows machine account (format: MACHINE\broj)
+                                    bool isWindowsAccount = userName.Contains("\\");
+                                    string emailClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "";
+                                    string displayName = isWindowsAccount
+                                        ? (emailClaim != "" ? emailClaim : "Korisnik")
+                                        : userName;
+                                    string avatarLetter = displayName.Length > 0
+                                        ? displayName.Substring(0, 1).ToUpper()
+                                        : "?";
+                                }
+                                @avatarLetter
+                            </span>
+                            <span class="hz-user-name">@displayName</span>
+                            <span class="hz-chevron">&#9662;</span>
+                        </button>
+                        <div class="hz-user-dropdown" id="userDropdown">
+                            @{
+                                var nameIdentifierClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                                string userId = nameIdentifierClaim != null ? nameIdentifierClaim.Value : string.Empty;
+                            }
+                            <a asp-controller="Korisnik" asp-action="Details" asp-route-id="@userId">
+                                👤 Moj profil
+                            </a>
+                            @if (User.IsInRole("Administrator"))
+                            {
+                                <a asp-controller="Korisnik" asp-action="Index">
+                                    ⚙️ Upravljanje korisnicima
+                                </a>
+                            }
+                            <div class="hz-dropdown-divider"></div>
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="hz-dropdown-logout">
+                                    ↩ Odjavi se
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                }
+                else
+                {
+                    <li>
+                        <a asp-controller="Account" asp-action="Register">Registruj se</a>
+                    </li>
+                    <li>
+                        <a class="hz-nav-cta" asp-controller="Account" asp-action="Login">Prijavi se</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </header>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="hz-footer">
+        <div class="hz-footer-inner">
+            <span>&copy; @DateTime.Now.Year &mdash; HealthZone</span>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        function toggleUserMenu(e) {
+            e.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('open');
+        }
+
+        function toggleNavDropdown(e, id) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById(id).classList.toggle('open');
+        }
+
+        document.addEventListener('click', function () {
+            document.querySelectorAll('.hz-nav-dropdown').forEach(d => d.classList.remove('open'));
+            var userDropdown = document.getElementById('userDropdown');
+            if (userDropdown) userDropdown.classList.remove('open');
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

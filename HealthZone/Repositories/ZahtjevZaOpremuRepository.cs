@@ -17,12 +17,17 @@ namespace HealthZone.Repositories
 
         public async Task<ZahtjevZaOpremu?> GetByIdAsync(int id)
         {
-            return await _zahtjeviZaOpremu.FindAsync(id);
+            return await _zahtjeviZaOpremu
+                .Include(z => z.Doktor)
+                .FirstOrDefaultAsync(z => z.ZahtjevId == id);
         }
 
         public async Task<IEnumerable<ZahtjevZaOpremu>> GetAllAsync()
         {
-            return await _zahtjeviZaOpremu.ToListAsync();
+            return await _zahtjeviZaOpremu
+                .Include(z => z.Doktor)
+                .OrderByDescending(z => z.ZahtjevId)
+                .ToListAsync();
         }
 
         public async Task AddAsync(ZahtjevZaOpremu zahtjevZaOpremu)

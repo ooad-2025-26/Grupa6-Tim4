@@ -1,59 +1,68 @@
 @model IEnumerable<HealthZone.Models.Notifikacija>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Notifikacije";
 }
 
-<h1>Index</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Poruka)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DatumSlanja)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TerminID)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Termin)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.Poruka)
+<div class="hz-page">
+
+    <div class="hz-header">
+        <div class="hz-logo">🔔</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Notifikacije</h1>
+            <p class="hz-subtitle">Obavijesti vezane uz termine, podsjetnike i izmjene.</p>
+        </div>
+    </div>
+
+    <div class="hz-toolbar">
+        <div class="hz-search">
+            <input type="text" id="hz-filter" placeholder="Pretraži notifikacije..." />
+        </div>
+        <a asp-action="Create" class="hz-btn hz-btn-primary">+ Nova/i notifikaciju</a>
+    </div>
+
+    <div class="hz-table-wrap">
+        @if (Model != null && Model.Any())
+        {
+            <table class="hz-table">
+                <thead><tr><th>Datum</th><th>Poruka</th><th>Status</th><th style="text-align:right">Akcije</th></tr></thead>
+                <tbody id="hz-tbody">
+                @foreach (var item in Model)
+                {
+                    <tr>
+            <td data-label="Datum">@item.DatumSlanja.ToString("g")</td>
+            <td data-label="Poruka">@(item.Poruka != null && item.Poruka.Length > 60 ? item.Poruka.Substring(0,60) + "…" : item.Poruka)</td>
+            <td data-label="Status">@(item.status == null ? "" : "")<span class="hz-badge hz-badge-info">@item.status</span></td>
+            <td class="hz-cell-actions" data-label="Akcije">
+                <a asp-action="Details" asp-route-id="@item.NotifikacijaId" title="Detalji">👁</a>
+                <a asp-action="Edit" asp-route-id="@item.NotifikacijaId" title="Uredi">✎</a>
+                <a asp-action="Delete" asp-route-id="@item.NotifikacijaId" class="danger" title="Obriši">🗑</a>
             </td>
-            <td>
-                @Html.DisplayFor(model => item.DatumSlanja)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.status)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.TerminID)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Termin)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.NotifikacijaId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.NotifikacijaId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.NotifikacijaId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="hz-empty">
+                <span class="icon">🔔</span>
+                <h3 style="margin:0 0 6px;color:var(--hz-accent)">Još nema unosa</h3>
+                <p style="margin:0 0 18px">Kliknite na dugme iznad da kreirate prvu stavku.</p>
+                <a asp-action="Create" class="hz-btn hz-btn-primary">+ Dodaj prvi unos</a>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    document.getElementById('hz-filter')?.addEventListener('input', function(e){
+        var q = e.target.value.toLowerCase();
+        document.querySelectorAll('#hz-tbody tr').forEach(function(tr){
+            tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+</script>

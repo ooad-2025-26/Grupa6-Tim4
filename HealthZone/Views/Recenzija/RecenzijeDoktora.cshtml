@@ -1,0 +1,411 @@
+@model IEnumerable<HealthZone.Models.Recenzija>
+@{
+    var doktor = ViewBag.Doktor as HealthZone.Models.Korisnik;
+    dynamic ocjene = ViewBag.Ocjene;
+    bool mozeOstaviti = ViewBag.MozeOstaviti ?? false;
+    ViewData["Title"] = "Recenzije – Dr. " + doktor?.Ime + " " + doktor?.Prezime;
+
+    double ukupno = ocjene?.Ukupno ?? 0;
+    double ljubaznost = ocjene?.Ljubaznost ?? 0;
+    double profesionalnost = ocjene?.Profesionalnost ?? 0;
+    double usluga = ocjene?.Usluga ?? 0;
+    int zvjezdice = (int)Math.Round(ukupno);
+}
+
+<link rel="stylesheet" href="~/css/healthzone.css" />
+
+<style>
+    .rec-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+    }
+
+    .rec-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e0f5ee 0%, #b2e8d4 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        border: 2px solid #d0ede3;
+        flex-shrink: 0;
+    }
+
+    .rec-doktor-info h2 {
+        font-size: 20px;
+        font-weight: 800;
+        color: #1a2e25;
+        margin: 0 0 4px;
+    }
+
+    .rec-doktor-info .spec-badge {
+        font-size: 12px;
+        color: #5a7a6a;
+        background: #f0faf5;
+        border: 1px solid #d0ede3;
+        border-radius: 20px;
+        padding: 3px 12px;
+        display: inline-block;
+    }
+
+    .rec-summary {
+        background: #fff;
+        border: 1px solid #e8f0ed;
+        border-radius: 14px;
+        padding: 24px 28px;
+        margin-bottom: 28px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 24px;
+        align-items: center;
+    }
+
+    .rec-big-score {
+        text-align: center;
+        min-width: 90px;
+    }
+
+    .rec-big-num {
+        font-size: 48px;
+        font-weight: 800;
+        color: #1a2e25;
+        line-height: 1;
+    }
+
+    .rec-big-stars {
+        font-size: 18px;
+        color: #f5a623;
+        margin: 4px 0;
+    }
+
+    .rec-big-count {
+        font-size: 12px;
+        color: #7a9a8a;
+    }
+
+    .rec-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .rec-bar-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: #3a5a4a;
+    }
+
+    .rec-bar-label {
+        width: 120px;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+
+    .rec-bar-track {
+        flex: 1;
+        height: 8px;
+        background: #e8f0ed;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .rec-bar-fill {
+        height: 100%;
+        background: var(--hz-accent, #00a86b);
+        border-radius: 4px;
+        transition: width 0.4s;
+    }
+
+    .rec-bar-val {
+        width: 30px;
+        text-align: right;
+        font-weight: 600;
+        color: #1a2e25;
+        font-size: 13px;
+    }
+
+    .rec-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .rec-card {
+        background: #fff;
+        border: 1px solid #e8f0ed;
+        border-radius: 12px;
+        padding: 18px 22px;
+        transition: box-shadow 0.15s;
+    }
+
+    .rec-card:hover {
+        box-shadow: 0 4px 16px rgba(0,168,107,0.08);
+    }
+
+    .rec-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .rec-pacijent {
+        font-weight: 700;
+        color: #1a2e25;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .rec-stars {
+        color: #f5a623;
+        font-size: 14px;
+    }
+
+    .rec-mini-bars {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
+    .rec-mini-item {
+        font-size: 11px;
+        color: #7a9a8a;
+        background: #f0faf5;
+        border-radius: 8px;
+        padding: 3px 9px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .rec-mini-item strong {
+        color: #1a2e25;
+        font-weight: 700;
+    }
+
+    .rec-komentar {
+        font-size: 14px;
+        color: #3a5a4a;
+        line-height: 1.6;
+        font-style: italic;
+    }
+
+    .rec-delete-form {
+        margin-top: 10px;
+        text-align: right;
+    }
+
+    .rec-delete-btn {
+        font-size: 11px;
+        color: #cc4444;
+        background: none;
+        border: 1px solid #ffcccc;
+        border-radius: 8px;
+        padding: 3px 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .rec-delete-btn:hover {
+        background: #fff0f0;
+    }
+
+    .rec-empty {
+        text-align: center;
+        padding: 48px 24px;
+        color: #8aaa99;
+        font-size: 15px;
+        background: #fff;
+        border: 1px dashed #d0ede3;
+        border-radius: 14px;
+    }
+
+    .rec-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .rec-btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #5a7a6a;
+        text-decoration: none;
+        padding: 7px 14px;
+        border: 1px solid #d0ede3;
+        border-radius: 20px;
+        background: #fff;
+        transition: border-color 0.15s, color 0.15s;
+    }
+
+    .rec-btn-back:hover {
+        border-color: #00a86b;
+        color: #00a86b;
+        text-decoration: none;
+    }
+
+    .rec-btn-add {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+        text-decoration: none;
+        padding: 7px 16px;
+        border-radius: 20px;
+        background: var(--hz-accent, #00a86b);
+        transition: opacity 0.15s;
+    }
+
+    .rec-btn-add:hover {
+        opacity: 0.85;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    @@media (max-width: 600px) {
+        .rec-summary {
+            grid-template-columns: 1fr;
+        }
+        .rec-bar-label {
+            width: 90px;
+        }
+    }
+</style>
+
+<div class="hz-page">
+
+    <div class="hz-header">
+        <div class="hz-logo">⭐</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Recenzije</h1>
+            <p class="hz-subtitle">Ocjene i komentari pacijenata.</p>
+        </div>
+    </div>
+
+    @if (doktor != null)
+    {
+        <div class="rec-header">
+            <div class="rec-avatar">👨‍⚕️</div>
+            <div class="rec-doktor-info">
+                <h2>Dr. @doktor.Ime @doktor.Prezime</h2>
+                @if (doktor.Specijalizacija.HasValue)
+                {
+                    <span class="spec-badge">@doktor.Specijalizacija</span>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="rec-actions">
+        <a asp-controller="Home" asp-action="MedicinskoOsoblje" class="rec-btn-back">← Medicinsko osoblje</a>
+        @if (mozeOstaviti && doktor != null)
+        {
+            <a asp-controller="Recenzija" asp-action="Create" asp-route-doktorId="@doktor.Id" class="rec-btn-add">⭐ Ostavi recenziju</a>
+        }
+    </div>
+
+    @if (Model.Any())
+    {
+        <!-- Score summary -->
+        <div class="rec-summary">
+            <div class="rec-big-score">
+                <div class="rec-big-num">@ukupno.ToString("0.0")</div>
+                <div class="rec-big-stars">
+                    @string.Concat(Enumerable.Repeat("★", zvjezdice))@string.Concat(Enumerable.Repeat("☆", 5 - zvjezdice))
+                </div>
+                <div class="rec-big-count">@Model.Count() recenzija</div>
+            </div>
+            <div class="rec-bars">
+                <div class="rec-bar-row">
+                    <div class="rec-bar-label">Ljubaznost</div>
+                    <div class="rec-bar-track"><div class="rec-bar-fill" style="width:@((ljubaznost/5*100).ToString("0", System.Globalization.CultureInfo.InvariantCulture))%"></div></div>
+                    <div class="rec-bar-val">@ljubaznost.ToString("0.0")</div>
+                </div>
+                <div class="rec-bar-row">
+                    <div class="rec-bar-label">Profesionalnost</div>
+                    <div class="rec-bar-track"><div class="rec-bar-fill" style="width:@((profesionalnost/5*100).ToString("0", System.Globalization.CultureInfo.InvariantCulture))%"></div></div>
+                    <div class="rec-bar-val">@profesionalnost.ToString("0.0")</div>
+                </div>
+                <div class="rec-bar-row">
+                    <div class="rec-bar-label">Usluga</div>
+                    <div class="rec-bar-track"><div class="rec-bar-fill" style="width:@((usluga/5*100).ToString("0", System.Globalization.CultureInfo.InvariantCulture))%"></div></div>
+                    <div class="rec-bar-val">@usluga.ToString("0.0")</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review cards -->
+        <div class="rec-list">
+            @foreach (var r in Model.OrderByDescending(x => x.RecenzijaId))
+            {
+                int ukupnoRec = (int)Math.Round((r.OcjenaLjubaznosti + r.OcjenaProfesionalnosti + r.OcjenaUsluge) / 3.0);
+                <div class="rec-card">
+                    <div class="rec-card-top">
+                        <div class="rec-pacijent">
+                            👤
+                            @if (r.Pacijent != null)
+                            {
+                                @(r.Pacijent.Ime + " " + r.Pacijent.Prezime)
+                            }
+                            else
+                            {
+                                <span>Pacijent</span>
+                            }
+                        </div>
+                        <div class="rec-stars">
+                            @string.Concat(Enumerable.Repeat("★", ukupnoRec))@string.Concat(Enumerable.Repeat("☆", 5 - ukupnoRec))
+                        </div>
+                    </div>
+                    <div class="rec-mini-bars">
+                        <div class="rec-mini-item">Ljubaznost <strong>@r.OcjenaLjubaznosti/5</strong></div>
+                        <div class="rec-mini-item">Profesionalnost <strong>@r.OcjenaProfesionalnosti/5</strong></div>
+                        <div class="rec-mini-item">Usluga <strong>@r.OcjenaUsluge/5</strong></div>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(r.Komentar))
+                    {
+                        <div class="rec-komentar">"@r.Komentar"</div>
+                    }
+                    @if (User.IsInRole("Administrator") || (User.IsInRole("Pacijent") && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == r.PacijentID))
+                    {
+                        <div class="rec-delete-form">
+                            <form asp-controller="Recenzija" asp-action="Delete" method="post" onsubmit="return confirm('Obrisati recenziju?')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@r.RecenzijaId" />
+                                <button type="submit" class="rec-delete-btn">🗑 Obriši</button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="rec-empty">
+            <div style="font-size:36px;margin-bottom:12px">💬</div>
+            <div>Još nema recenzija za ovog doktora.</div>
+            @if (mozeOstaviti && doktor != null)
+            {
+                <a asp-controller="Recenzija" asp-action="Create" asp-route-doktorId="@doktor.Id" class="rec-btn-add" style="margin-top:16px;display:inline-flex">⭐ Budi prvi</a>
+            }
+        </div>
+    }
+</div>

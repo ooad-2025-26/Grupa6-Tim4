@@ -1,54 +1,64 @@
 @model HealthZone.Models.KorisnikNaListi
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Uredi stavku na listi čekanja";
+    var listaItems = ViewData["ListaID"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var korisnikItems = ViewData["KorisnikID"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
 }
 
-<h1>Edit</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h4>KorisnikNaListi</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+    <div class="hz-header">
+        <div class="hz-logo">🕐</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Uredi stavku na listi čekanja</h1>
+            <p class="hz-subtitle">Ažurirajte podatke o pacijentu na listi čekanja.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <form asp-action="Edit" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
             <input type="hidden" asp-for="KorisnikNaListiID" />
-            <div class="form-group">
-                <label asp-for="Datum" class="control-label"></label>
-                <input asp-for="Datum" class="form-control" />
-                <span asp-validation-for="Datum" class="text-danger"></span>
+            <div class="hz-section-title">Podaci</div>
+
+            <div class="hz-grid">
+                <div class="hz-field hz-full">
+                    <label asp-for="ListaID" class="hz-label">Lista čekanja<span class="req">*</span></label>
+                    <select asp-for="ListaID" class="hz-select" asp-items="listaItems">
+                        <option value="">— Odaberite listu —</option>
+                    </select>
+                    <span asp-validation-for="ListaID" class="hz-error"></span>
+                </div>
+                <div class="hz-field hz-full">
+                    <label asp-for="KorisnikID" class="hz-label">Pacijent<span class="req">*</span></label>
+                    <select asp-for="KorisnikID" class="hz-select" asp-items="korisnikItems">
+                        <option value="">— Odaberite pacijenta —</option>
+                    </select>
+                    <span asp-validation-for="KorisnikID" class="hz-error"></span>
+                </div>
+                <div class="hz-field hz-full">
+                    <label asp-for="Datum" class="hz-label">Datum prijave</label>
+                    <input type="datetime-local" asp-for="Datum" class="hz-input"
+                           value="@Model.Datum.ToString("yyyy-MM-ddTHH:mm")" />
+                    <span asp-validation-for="Datum" class="hz-error"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="ListaID" class="control-label"></label>
-                <input asp-for="ListaID" class="form-control" />
-                <span asp-validation-for="ListaID" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Lista" class="control-label"></label>
-                <input asp-for="Lista" class="form-control" />
-                <span asp-validation-for="Lista" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="KorisnikID" class="control-label"></label>
-                <input asp-for="KorisnikID" class="form-control" />
-                <span asp-validation-for="KorisnikID" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Korisnik" class="control-label"></label>
-                <input asp-for="Korisnik" class="form-control" />
-                <span asp-validation-for="Korisnik" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <div class="hz-actions">
+                <a asp-action="Index" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-primary">Sačuvaj izmjene</button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

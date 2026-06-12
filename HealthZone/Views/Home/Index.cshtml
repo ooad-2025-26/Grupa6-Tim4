@@ -1,8 +1,307 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Početna";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@section Styles {
+    <style>
+        :root {
+            --hz-primary: #0BA5A4;
+            --hz-primary-dark: #0E7C7B;
+            --hz-primary-deep: #0a3d3d;
+            --hz-accent: #4ECDC4;
+            --hz-text: #0f1f24;
+            --hz-muted: #5b6b72;
+            --hz-border: #e4ecec;
+            --hz-surface: #ffffff;
+            --hz-surface-alt: #f4f9f9;
+        }
+
+        body { font-family: 'Inter', system-ui, sans-serif; color: var(--hz-text); }
+
+        /* ── Hero ── */
+        .hz-hero {
+            position: relative;
+            background: radial-gradient(1200px 600px at 80% -10%, rgba(78,205,196,0.25), transparent 60%),
+                        linear-gradient(135deg, #0a3d3d 0%, #0E7C7B 55%, #0BA5A4 100%);
+            overflow: hidden;
+        }
+        .hz-hero::before {
+            content: "";
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: radial-gradient(ellipse at center, #000 40%, transparent 75%);
+            pointer-events: none;
+        }
+        .hz-hero-inner {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 96px 24px 120px;
+        }
+        .hz-hero-content { max-width: 620px; }
+
+        .hz-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #d6f5f3;
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: .02em;
+            margin-bottom: 22px;
+            backdrop-filter: blur(6px);
+        }
+        .hz-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ECDC4; box-shadow: 0 0 0 4px rgba(78,205,196,0.25); }
+
+        .hz-hero h1 {
+            color: #fff;
+            font-size: clamp(2.2rem, 4.4vw, 3.2rem);
+            font-weight: 700;
+            line-height: 1.08;
+            letter-spacing: -0.02em;
+            margin: 0 0 18px;
+        }
+        .hz-hero h1 em { font-style: normal; color: #4ECDC4; }
+
+        .hz-hero p {
+            color: rgba(255,255,255,0.78);
+            font-size: 1.05rem;
+            line-height: 1.6;
+            max-width: 480px;
+            margin: 0 0 32px;
+        }
+
+        .hz-hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+        .hz-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 22px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: transform .12s ease, background .15s ease, border-color .15s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .hz-btn svg { width: 16px; height: 16px; }
+        .hz-btn-primary { background: #fff; color: var(--hz-primary-dark); }
+        .hz-btn-primary:hover { transform: translateY(-1px); color: var(--hz-primary-deep); text-decoration: none; }
+        .hz-btn-ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,0.28); }
+        .hz-btn-ghost:hover { background: rgba(255,255,255,0.08); color: #fff; text-decoration: none; }
+
+        /* ── Stats ── */
+        .hz-stats {
+            background: #fff;
+            border: 1px solid var(--hz-border);
+            border-radius: 16px;
+            max-width: 960px;
+            margin: -56px auto 0;
+            position: relative;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            box-shadow: 0 12px 40px -16px rgba(10,61,61,0.18);
+        }
+        .hz-stat { padding: 26px 20px; text-align: center; border-right: 1px solid var(--hz-border); }
+        .hz-stat:last-child { border-right: none; }
+        .hz-stat-value { font-size: 1.75rem; font-weight: 700; color: var(--hz-text); letter-spacing: -0.02em; line-height: 1; }
+        .hz-stat-label { font-size: 0.82rem; color: var(--hz-muted); margin-top: 6px; }
+
+        /* ── Section ── */
+        .hz-section { max-width: 1200px; margin: 0 auto; padding: 96px 24px 0; }
+        .hz-section-head { text-align: center; margin-bottom: 48px; }
+        .hz-section-label {
+            color: var(--hz-primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .hz-section-title {
+            font-size: clamp(1.6rem, 3vw, 2.1rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--hz-text);
+            margin: 0;
+        }
+
+        /* ── Service cards ── */
+        .hz-services { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+        .hz-service-card {
+            background: #fff;
+            border: 1px solid var(--hz-border);
+            border-radius: 14px;
+            padding: 26px 22px;
+            transition: border-color .15s, transform .15s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .hz-service-card:hover {
+            border-color: var(--hz-primary);
+            transform: translateY(-2px);
+            color: inherit;
+            text-decoration: none;
+        }
+        .hz-service-icon {
+            width: 40px; height: 40px;
+            background: var(--hz-surface-alt);
+            border-radius: 10px;
+            display: inline-flex; align-items: center; justify-content: center;
+            color: var(--hz-primary);
+            margin-bottom: 16px;
+        }
+        .hz-service-icon svg { width: 20px; height: 20px; }
+        .hz-service-card h3 { font-size: 1rem; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+        .hz-service-card p { font-size: 0.88rem; color: var(--hz-muted); line-height: 1.55; margin: 0; }
+
+        .hz-services-link { text-align: center; margin-top: 36px; }
+        .hz-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: var(--hz-primary-dark);
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .hz-link:hover { color: var(--hz-primary-deep); text-decoration: none; }
+
+        /* ── Why ── */
+        .hz-why { background: var(--hz-surface-alt); margin-top: 96px; padding: 88px 24px; }
+        .hz-why-inner { max-width: 1100px; margin: 0 auto; }
+        .hz-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+        .hz-feature { text-align: center; padding: 0 12px; }
+        .hz-feature-icon {
+            width: 48px; height: 48px;
+            background: #fff;
+            border: 1px solid var(--hz-border);
+            border-radius: 12px;
+            display: inline-flex; align-items: center; justify-content: center;
+            color: var(--hz-primary);
+            margin-bottom: 16px;
+        }
+        .hz-feature-icon svg { width: 22px; height: 22px; }
+        .hz-feature h3 { font-size: 1rem; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
+        .hz-feature p { font-size: 0.9rem; color: var(--hz-muted); line-height: 1.6; max-width: 280px; margin: 0 auto; }
+
+        /* ── CTA ── */
+        .hz-cta {
+            background: linear-gradient(135deg, #0a3d3d, #0E7C7B);
+            color: #fff;
+            text-align: center;
+            padding: 88px 24px;
+            margin-top: 96px;
+        }
+        .hz-cta h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 12px; }
+        .hz-cta p { color: rgba(255,255,255,0.75); margin: 0 auto 28px; max-width: 480px; }
+
+        @@media (max-width: 900px) {
+            .hz-services { grid-template-columns: repeat(2, 1fr); }
+            .hz-stats { grid-template-columns: repeat(2, 1fr); }
+            .hz-stat:nth-child(2) { border-right: none; }
+            .hz-stat:nth-child(3), .hz-stat:nth-child(4) { border-top: 1px solid var(--hz-border); }
+            .hz-features { grid-template-columns: 1fr; gap: 28px; }
+        }
+        @@media (max-width: 600px) {
+            .hz-hero-inner { padding: 72px 20px 96px; }
+            .hz-services { grid-template-columns: 1fr; }
+            .hz-stats { grid-template-columns: repeat(2, 1fr); margin: -36px 16px 0; }
+        }
+    </style>
+}
+
+<section class="hz-hero">
+    <div class="hz-hero-inner">
+        <div class="hz-hero-content">
+            <span class="hz-eyebrow"><span class="dot"></span> Poliklinika u Sarajevu</span>
+            <h1>Vaše zdravlje, <em>naš prioritet.</em></h1>
+            <p>Moderna poliklinika sa timom iskusnih specijalista. Zakažite termin online i dobijte zdravstvenu zaštitu bez čekanja.</p>
+            <div class="hz-hero-btns">
+                <a href="/Termini/Create" class="hz-btn hz-btn-primary">
+                    Zakaži termin
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </a>
+                <a href="/MedicinskeUsluge" class="hz-btn hz-btn-ghost">Naše usluge</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="hz-stats">
+    <div class="hz-stat"><div class="hz-stat-value">4+</div><div class="hz-stat-label">Specijalista</div></div>
+    <div class="hz-stat"><div class="hz-stat-value">1 200+</div><div class="hz-stat-label">Pacijenata</div></div>
+    <div class="hz-stat"><div class="hz-stat-value">4.8</div><div class="hz-stat-label">Prosječna ocjena</div></div>
+    <div class="hz-stat"><div class="hz-stat-value">10+</div><div class="hz-stat-label">Godina iskustva</div></div>
 </div>
+
+<section class="hz-section">
+    <div class="hz-section-head">
+        <div class="hz-section-label">Naše specijalizacije</div>
+        <h2 class="hz-section-title">Usluge koje pružamo</h2>
+    </div>
+    <div class="hz-services">
+        <a href="/MedicinskeUsluge" class="hz-service-card">
+            <div class="hz-service-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></div>
+            <h3>Opća medicina</h3>
+            <p>Kompletni pregledi i preventivna zaštita za cijelu porodicu.</p>
+        </a>
+        <a href="/MedicinskeUsluge" class="hz-service-card">
+            <div class="hz-service-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+            <h3>Dermatologija</h3>
+            <p>Dijagnostika i liječenje kožnih oboljenja sa modernom opremom.</p>
+        </a>
+        <a href="/MedicinskeUsluge" class="hz-service-card">
+            <div class="hz-service-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <h3>Kardiologija</h3>
+            <p>EKG, ultrazvuk srca i kompletna kardiološka dijagnostika.</p>
+        </a>
+        <a href="/MedicinskeUsluge" class="hz-service-card">
+            <div class="hz-service-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg></div>
+            <h3>Pedijatrija</h3>
+            <p>Briga o zdravlju najmlađih sa toplim i profesionalnim pristupom.</p>
+        </a>
+    </div>
+    <div class="hz-services-link">
+        <a href="/MedicinskeUsluge" class="hz-link">Pogledaj sve usluge i cijene →</a>
+    </div>
+</section>
+
+<section class="hz-why">
+    <div class="hz-why-inner">
+        <div class="hz-section-head">
+            <div class="hz-section-label">Zašto HealthZone</div>
+            <h2 class="hz-section-title">Jednostavno i efikasno</h2>
+        </div>
+        <div class="hz-features">
+            <div class="hz-feature">
+                <div class="hz-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+                <h3>Online zakazivanje</h3>
+                <p>Zakažite termin u par klikova, bez čekanja na telefon.</p>
+            </div>
+            <div class="hz-feature">
+                <div class="hz-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <h3>Sigurni podaci</h3>
+                <p>Vaša medicinska historija je zaštićena modernom enkripcijom.</p>
+            </div>
+            <div class="hz-feature">
+                <div class="hz-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+                <h3>Bez dugog čekanja</h3>
+                <p>Pametna lista čekanja osigurava da dobijete termin što prije.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="hz-cta">
+    <h2>Spremni ste zakazati termin?</h2>
+    <p>Odaberite doktora, izaberite vrijeme i dobijte potvrdu na email.</p>
+    <a href="/Termini/Create" class="hz-btn hz-btn-primary">Zakaži termin sada
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+</section>

@@ -1,41 +1,166 @@
 @model IEnumerable<HealthZone.Models.ListaCekanja>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Liste čekanja";
 }
-
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.DoktorID)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Doktor)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.DoktorID)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Doktor)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ListaId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ListaId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ListaId">Delete</a>
-            </td>
-        </tr>
+@{
+    bool imaListu = (bool)(ViewData["ImaListu"] ?? false);
+    bool jeDoktor = (bool)(ViewData["JeDoktor"] ?? false);
+    int? mojaListaId = (int?)ViewData["MojaListaId"];
 }
-    </tbody>
-</table>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+    .hz-count-badge {
+        display: inline-block;
+        background: #e6f1fb;
+        color: #185fa5;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 99px;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+
+    .hz-no-results {
+        display: none;
+        text-align: center;
+        padding: 40px 20px;
+        color: #888;
+        font-size: 14px;
+    }
+
+    .hz-badge-spec {
+        background: #e1f5ee;
+        color: #0f6e56;
+    }
+</style>
+
+<div class="hz-page">
+
+    <div class="hz-header">
+        <div class="hz-logo">📋</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Liste čekanja <span class="hz-count-badge" id="hz-count">@Model?.Count()</span></h1>
+            <p class="hz-subtitle">Upravljajte listama čekanja za doktore u HealthZone sistemu.</p>
+        </div>
+    </div>
+
+    <div class="hz-toolbar">
+        <div class="hz-search">
+            <input type="text" id="hz-filter" placeholder="Pretraži liste čekanja..." />
+        </div>
+        @if (!imaListu)
+        {
+
+            <a asp-action="Create" asp-controller="ListaCekanja" class="hz-btn hz-btn-primary">+ Nova lista čekanja</a>
+
+        }
+    </div>
+
+    <div class="hz-table-wrap">
+        @if (Model != null && Model.Any())
+        {
+            <table class="hz-table">
+                <thead>
+                    <tr>
+                        <th>ID Liste</th>
+                        <th>Doktor</th>
+                        <th>Specijalizacija</th>
+                        <th style="text-align:right">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody id="hz-tbody">
+                    @foreach (var lista in Model)
+                    {
+                        var doktor = lista.Doktor;
+                        var inicijali = ((doktor?.Ime?.Length > 0 ? doktor.Ime.Substring(0, 1) : "?")
+                        + (doktor?.Prezime?.Length > 0 ? doktor.Prezime.Substring(0, 1) : "")).ToUpper();
+
+                        <tr>
+                            <td data-label="ID Liste">
+                                <span style="font-family:ui-monospace,monospace;font-size:13px;color:#185fa5;font-weight:600">#@lista.ListaId</span>
+                            </td>
+                            <td data-label="Doktor">
+                                <div class="hz-cell-user">
+                                    <span class="hz-avatar">@inicijali</span>
+                                    <div class="meta">
+                                        <b>@doktor?.Ime @doktor?.Prezime</b>
+                                        <span>@doktor?.Email</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Specijalizacija">
+                                @if (doktor?.Specijalizacija != null)
+                                {
+                                    <span class="hz-badge hz-badge-spec">@doktor.Specijalizacija</span>
+                                }
+                                else
+                                {
+                                    <span style="color:#bbb;font-size:13px">—</span>
+                                }
+                            </td>
+                            <td class="hz-cell-actions" data-label="Akcije">
+                                <a asp-action="Pregled" asp-controller="ListaCekanja" asp-route-id="@lista.ListaId" title="Pregled pacijenata">👁</a>
+                                <a asp-action="Delete" asp-controller="ListaCekanja" asp-route-id="@lista.ListaId" class="danger" title="Obriši">🗑</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="hz-no-results" id="hz-no-results">
+                Nema lista čekanja koje odgovaraju pretrazi.
+            </div>
+        }
+        else
+        {
+            <div class="hz-empty">
+                <span class="icon">📋</span>
+                <h3 style="margin:0 0 6px;color:var(--hz-accent)">Još nema lista čekanja</h3>
+                <p style="margin:0 0 18px">Kliknite na dugme iznad da kreirate prvu listu čekanja.</p>
+                @if (jeDoktor && !imaListu)
+                {
+                    <a asp-action="Create" class="hz-btn hz-btn-primary">
+                        <i class="hz-btn hz-btn-primary"></i> Kreiraj moju listu čekanja
+                    </a>
+                }
+                @if (jeDoktor && imaListu && mojaListaId.HasValue)
+                {
+                    <a asp-action="Pregled" asp-route-id="@mojaListaId" class="btn btn-outline-primary mb-3">
+                        <i class="bi bi-list-ul"></i> Moja lista čekanja
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    (function () {
+        var searchInput = document.getElementById('hz-filter');
+        var tbody = document.getElementById('hz-tbody');
+        var noResults = document.getElementById('hz-no-results');
+        var countBadge = document.getElementById('hz-count');
+
+        function applyFilters() {
+            if (!tbody) return;
+            var q = (searchInput?.value || '').toLowerCase().trim();
+            var rows = tbody.querySelectorAll('tr');
+            var visible = 0;
+
+            rows.forEach(function (tr) {
+                var show = !q || tr.textContent.toLowerCase().includes(q);
+                tr.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            if (countBadge) countBadge.textContent = visible;
+            if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+        }
+
+        searchInput?.addEventListener('input', applyFilters);
+        applyFilters();
+    })();
+</script>

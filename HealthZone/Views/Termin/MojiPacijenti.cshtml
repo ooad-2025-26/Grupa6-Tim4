@@ -1,0 +1,95 @@
+﻿@model IEnumerable<HealthZone.Models.Korisnik>
+
+@{
+    ViewData["Title"] = "Moji pacijenti";
+}
+
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<div class="hz-page">
+
+    <div class="hz-header">
+        <div class="hz-logo">👨‍⚕️</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Moji pacijenti</h1>
+            <p class="hz-subtitle">Pregled pacijenata sa zakazanim terminima i upravljanje prioritetima.</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="hz-alert hz-alert-success">✅ @TempData["Success"]</div>
+    }
+    @if (TempData["Greska"] != null)
+    {
+        <div class="hz-alert hz-alert-danger">⚠️ @TempData["Greska"]</div>
+    }
+
+    <div class="hz-toolbar">
+        <div class="hz-search">
+            <input type="text" id="hz-filter" placeholder="Pretraži pacijente..." />
+        </div>
+        <a asp-action="Index" class="hz-btn hz-btn-ghost">← Nazad na termine</a>
+    </div>
+
+    <div class="hz-table-wrap">
+        @if (Model != null && Model.Any())
+        {
+            <table class="hz-table">
+                <thead>
+                    <tr>
+                        <th>Ime i prezime</th>
+                        <th>Email</th>
+                        <th>Broj termina</th>
+                        <th>Trenutni prioritet</th>
+                        <th style="text-align:right">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody id="hz-tbody">
+                    @foreach (var pacijent in Model)
+                    {
+                        var brojTermina = ViewData[$"BrojTermina_{pacijent.Id}"] ?? 0;
+                        var prioritetText = pacijent.Prioritet?.ToString() ?? "Nije postavljen";
+                        var prioritetBadge = pacijent.Prioritet switch
+                        {
+                            Prioritet.Nizak => "hz-badge hz-badge-success",
+                            Prioritet.Srednji => "hz-badge hz-badge-warning",
+                            Prioritet.Visok => "hz-badge hz-badge-danger",
+                            _ => "hz-badge hz-badge-info"
+                        };
+
+                        <tr>
+                            <td data-label="Ime i prezime"><strong>@pacijent.Ime @pacijent.Prezime</strong></td>
+                            <td data-label="Email">@pacijent.Email</td>
+                            <td data-label="Broj termina"><span class="hz-badge hz-badge-info">@brojTermina</span></td>
+                            <td data-label="Trenutni prioritet"><span class="@prioritetBadge">@prioritetText</span></td>
+                            <td class="hz-cell-actions" data-label="Akcije">
+                                <a asp-action="PromijeniPrioritet"
+                                   asp-route-pacijentId="@pacijent.Id"
+                                   title="Promijeni prioritet">📝</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="hz-empty">
+                <span class="icon">👨‍⚕️</span>
+                <h3 style="margin:0 0 6px;color:var(--hz-accent)">Nema pacijenata</h3>
+                <p style="margin:0">Trenutno nemate pacijenata sa zakazanim terminima.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    document.getElementById('hz-filter')?.addEventListener('input', function (e) {
+        var q = e.target.value.toLowerCase();
+        document.querySelectorAll('#hz-tbody tr').forEach(function (tr) {
+            tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+</script>

@@ -1,52 +1,105 @@
 @model HealthZone.Models.KorisnikNaListi
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalji — pacijent na listi čekanja";
+    var priStr = Model.Korisnik?.Prioritet?.ToString() ?? "";
+    var priClass = priStr switch
+    {
+        "Nizak" => "hz-badge hz-badge-pri-nizak",
+        "Srednji" => "hz-badge hz-badge-pri-srednji",
+        "Visok" => "hz-badge hz-badge-pri-visok",
+        _ => "hz-badge"
+    };
 }
 
-<h1>Details</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<div>
-    <h4>KorisnikNaListi</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Datum)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Datum)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ListaID)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ListaID)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Lista)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Lista)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.KorisnikID)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.KorisnikID)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Korisnik)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Korisnik)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.KorisnikNaListiID">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<style>
+    .hz-badge-pri-nizak {
+        background: #eaf3de;
+        color: #3b6d11;
+    }
+
+    .hz-badge-pri-srednji {
+        background: #faeeda;
+        color: #854f0b;
+    }
+
+    .hz-badge-pri-visok {
+        background: #fcebeb;
+        color: #a32d2d;
+    }
+
+    .hz-badge-spec {
+        background: #e1f5ee;
+        color: #0f6e56;
+    }
+</style>
+
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+    <div class="hz-header">
+        <div class="hz-logo">🕐</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Detalji stavke na listi</h1>
+            <p class="hz-subtitle">Pregled svih informacija o pacijentu na listi čekanja.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <div class="hz-section-title">Pacijent</div>
+        <div class="hz-grid">
+            <div class="hz-field">
+                <label class="hz-label">Ime i prezime</label>
+                <div class="hz-input hz-readonly">@Model.Korisnik?.Ime @Model.Korisnik?.Prezime</div>
+            </div>
+            <div class="hz-field">
+                <label class="hz-label">Email</label>
+                <div class="hz-input hz-readonly">@(Model.Korisnik?.Email ?? "—")</div>
+            </div>
+            <div class="hz-field">
+                <label class="hz-label">Broj kartona</label>
+                <div class="hz-input hz-readonly" style="font-family:ui-monospace,monospace;font-size:13px">
+                    @(Model.Korisnik?.BrojKartona ?? "—")
+                </div>
+            </div>
+            <div class="hz-field">
+                <label class="hz-label">Prioritet</label>
+                <div class="hz-input hz-readonly">
+                    @if (!string.IsNullOrEmpty(priStr))
+                    {
+                        <span class="@priClass">@priStr</span>
+                    }
+                    else
+                    {
+                        @:—
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="hz-section-title" style="margin-top:24px">Stavka na listi</div>
+        <div class="hz-grid">
+            <div class="hz-field">
+                <label class="hz-label">Lista čekanja</label>
+                <div class="hz-input hz-readonly" style="font-family:ui-monospace,monospace;color:#185fa5;font-weight:600">
+                    #@Model.ListaID
+                </div>
+            </div>
+            <div class="hz-field">
+                <label class="hz-label">Datum prijave</label>
+                <div class="hz-input hz-readonly">@Model.Datum.ToString("dd.MM.yyyy HH:mm")</div>
+            </div>
+        </div>
+
+        <div class="hz-actions hz-actions-between">
+            <a asp-action="Index" class="hz-btn hz-btn-ghost">Nazad</a>
+            <div style="display:flex;gap:10px">
+                <a asp-action="Edit" asp-route-id="@Model.KorisnikNaListiID" class="hz-btn hz-btn-ghost">Uredi</a>
+                <a asp-action="Delete" asp-route-id="@Model.KorisnikNaListiID" class="hz-btn hz-btn-danger">Ukloni s liste</a>
+            </div>
+        </div>
+    </div>
 </div>

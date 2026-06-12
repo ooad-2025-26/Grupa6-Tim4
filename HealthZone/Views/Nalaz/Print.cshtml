@@ -1,0 +1,331 @@
+@model HealthZone.Models.Nalaz
+@using HealthZone.Models
+
+@{
+    ViewData["Title"] = "Medicinski nalaz";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medicinski nalaz — @Model.Pacijent?.Ime @Model.Pacijent?.Prezime</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+            color: #1a2332;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .doc-wrapper {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* Top bar */
+        .doc-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .doc-topbar a {
+            color: #0BA5A4;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-print {
+            background: #0BA5A4;
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 999px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-print:hover { background: #099493; }
+
+        /* Papir */
+        .doc-paper {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 56px 64px;
+        }
+
+        /* Header */
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 28px;
+            border-bottom: 2px solid #0BA5A4;
+            margin-bottom: 36px;
+        }
+
+        .doc-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .doc-brand-icon {
+            width: 48px;
+            height: 48px;
+            background: #0BA5A4;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .doc-brand-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0BA5A4;
+            line-height: 1;
+        }
+
+        .doc-brand-sub {
+            font-size: 12px;
+            color: #6b7a90;
+            margin-top: 3px;
+        }
+
+        .doc-meta {
+            text-align: right;
+        }
+
+        .doc-meta-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a2332;
+        }
+
+        .doc-meta-id {
+            font-size: 13px;
+            color: #6b7a90;
+            margin-top: 4px;
+        }
+
+        .doc-meta-date {
+            font-size: 13px;
+            color: #6b7a90;
+            margin-top: 2px;
+        }
+
+        /* Sekcija */
+        .doc-section {
+            margin-bottom: 32px;
+        }
+
+        .doc-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #0BA5A4;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e8f4f4;
+        }
+
+        .doc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 32px;
+        }
+
+        .doc-field { display: flex; flex-direction: column; gap: 4px; }
+        .doc-field.full { grid-column: 1 / -1; }
+
+        .doc-field-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #8a97a8;
+        }
+
+        .doc-field-value {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1a2332;
+        }
+
+        .doc-field-value.desc {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #374151;
+            white-space: pre-wrap;
+        }
+
+        /* Footer */
+        .doc-footer {
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e9ef;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .doc-footer-note {
+            font-size: 11px;
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+        .doc-signature {
+            text-align: right;
+        }
+
+        .doc-signature-line {
+            width: 160px;
+            height: 1px;
+            background: #9ca3af;
+            margin-bottom: 6px;
+            margin-left: auto;
+        }
+
+        .doc-signature-label {
+            font-size: 11px;
+            color: #6b7a90;
+        }
+
+        /* Print */
+        @@media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .doc-topbar { display: none; }
+
+            .doc-wrapper { max-width: 100%; }
+
+            .doc-paper {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 40px 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="doc-wrapper">
+
+        <!-- Top bar -->
+        <div class="doc-topbar">
+            <a href="javascript:history.back()">← Nazad na detalje</a>
+            <button class="btn-print" onclick="window.print()">🖨️ Odštampaj nalaz</button>
+        </div>
+
+        <!-- Papir -->
+        <div class="doc-paper">
+
+            <!-- Header -->
+            <div class="doc-header">
+                <div class="doc-brand">
+                    <div class="doc-brand-icon">🏥</div>
+                    <div>
+                        <div class="doc-brand-name">HealthZone</div>
+                        <div class="doc-brand-sub">Medicinski informacijski sistem</div>
+                    </div>
+                </div>
+                <div class="doc-meta">
+                    <div class="doc-meta-title">Medicinski nalaz</div>
+                    <div class="doc-meta-id">Nalaz #@Model.NalazId</div>
+                    <div class="doc-meta-date">Datum: @DateTime.Now.ToString("dd.MM.yyyy")</div>
+                </div>
+            </div>
+
+            <!-- Podaci o pacijentu -->
+            <div class="doc-section">
+                <div class="doc-section-title">Podaci o pacijentu</div>
+                <div class="doc-grid">
+                    <div class="doc-field">
+                        <span class="doc-field-label">Ime i prezime</span>
+                        <span class="doc-field-value">
+                            @(Model.Pacijent != null ? $"{Model.Pacijent.Ime} {Model.Pacijent.Prezime}" : "—")
+                        </span>
+                    </div>
+                    <div class="doc-field">
+                        <span class="doc-field-label">Broj kartona</span>
+                        <span class="doc-field-value">@(Model.Pacijent?.BrojKartona ?? "—")</span>
+                    </div>
+                    <div class="doc-field">
+                        <span class="doc-field-label">Datum pregleda</span>
+                        <span class="doc-field-value">
+                            @(Model.Termin != null ? Model.Termin.Datum.ToString("dd.MM.yyyy") : "—")
+                        </span>
+                    </div>
+                    <div class="doc-field">
+                        <span class="doc-field-label">Vrijeme pregleda</span>
+                        <span class="doc-field-value">
+                            @(Model.Termin != null ? Model.Termin.Vrijeme.ToString("HH:mm") : "—")
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medicinski nalaz -->
+            <div class="doc-section">
+                <div class="doc-section-title">Medicinski nalaz</div>
+                <div class="doc-grid">
+                    <div class="doc-field full">
+                        <span class="doc-field-label">Dijagnoza</span>
+                        <span class="doc-field-value">@Model.Dijagnoza</span>
+                    </div>
+                    <div class="doc-field full">
+                        <span class="doc-field-label">Opis nalaza</span>
+                        <span class="doc-field-value desc">@Model.Opis</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Terapija))
+                    {
+                        <div class="doc-field full">
+                            <span class="doc-field-label">Terapija</span>
+                            <span class="doc-field-value desc">@Model.Terapija</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="doc-footer">
+                <div class="doc-footer-note">
+                    Dokument generisan automatski kroz HealthZone sistem.<br />
+                    @DateTime.Now.ToString("dd.MM.yyyy HH:mm")
+                </div>
+                <div class="doc-signature">
+                    <div class="doc-signature-line"></div>
+                    <div class="doc-signature-label">Potpis doktora</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

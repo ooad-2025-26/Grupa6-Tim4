@@ -1,0 +1,382 @@
+@model HealthZone.Models.ZahtjevZaOpremu
+@using HealthZone.Models
+
+@{
+    ViewData["Title"] = "Dokumentacija narudžbe";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dokumentacija narudžbe — @Model.Naziv</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+            color: #1a2332;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .doc-wrapper {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* ── Top bar (ne printuje se) ── */
+        .doc-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .doc-topbar a {
+            color: #0BA5A4;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-print {
+            background: #0BA5A4;
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 999px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-print:hover { background: #099493; }
+
+        /* ── Dokument ── */
+        .doc-paper {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 56px 64px;
+        }
+
+        /* Header dokumenta */
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 28px;
+            border-bottom: 2px solid #0BA5A4;
+            margin-bottom: 36px;
+        }
+
+        .doc-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .doc-brand-icon {
+            width: 48px;
+            height: 48px;
+            background: #0BA5A4;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .doc-brand-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0BA5A4;
+            line-height: 1;
+        }
+
+        .doc-brand-sub {
+            font-size: 12px;
+            color: #6b7a90;
+            margin-top: 3px;
+        }
+
+        .doc-meta {
+            text-align: right;
+        }
+
+        .doc-meta-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a2332;
+        }
+
+        .doc-meta-id {
+            font-size: 13px;
+            color: #6b7a90;
+            margin-top: 4px;
+        }
+
+        .doc-meta-date {
+            font-size: 13px;
+            color: #6b7a90;
+            margin-top: 2px;
+        }
+
+        /* Status badge */
+        .doc-status-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .doc-status-badge {
+            background: #dcfce7;
+            color: #16a34a;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 5px 14px;
+            border-radius: 999px;
+            border: 1px solid #bbf7d0;
+        }
+
+        .doc-status-label {
+            font-size: 13px;
+            color: #6b7a90;
+        }
+
+        /* Sekcija */
+        .doc-section {
+            margin-bottom: 32px;
+        }
+
+        .doc-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #0BA5A4;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e8f4f4;
+        }
+
+        .doc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px 32px;
+        }
+
+        .doc-field { display: flex; flex-direction: column; gap: 4px; }
+        .doc-field.full { grid-column: 1 / -1; }
+
+        .doc-field-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #8a97a8;
+        }
+
+        .doc-field-value {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1a2332;
+        }
+
+        .doc-field-value.desc {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #374151;
+        }
+
+        /* Badge hitnost */
+        .badge {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+        .badge-nizak  { background: #f1f5f9; color: #475569; }
+        .badge-srednji { background: #fef9c3; color: #854d0e; }
+        .badge-visok  { background: #fee2e2; color: #b91c1c; }
+        .badge-hitno  { background: #fecaca; color: #991b1b; }
+
+        /* Footer dokumenta */
+        .doc-footer {
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e9ef;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .doc-footer-note {
+            font-size: 11px;
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+        .doc-signature {
+            text-align: right;
+        }
+
+        .doc-signature-line {
+            width: 160px;
+            height: 1px;
+            background: #9ca3af;
+            margin-bottom: 6px;
+            margin-left: auto;
+        }
+
+        .doc-signature-label {
+            font-size: 11px;
+            color: #6b7a90;
+        }
+
+        /* ── Print stilovi ── */
+        @@media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .doc-topbar { display: none; }
+
+            .doc-wrapper {
+                max-width: 100%;
+            }
+
+            .doc-paper {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 40px 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="doc-wrapper">
+
+        <!-- Top bar (skriva se pri printu) -->
+        <div class="doc-topbar no-print">
+            <a href="javascript:history.back()">← Nazad na detalje</a>
+            <button class="btn-print" onclick="window.print()">🖨️ Printaj dokumentaciju</button>
+        </div>
+
+        <!-- Papir -->
+        <div class="doc-paper">
+
+            <!-- Header -->
+            <div class="doc-header">
+                <div class="doc-brand">
+                    <div class="doc-brand-icon">🏥</div>
+                    <div>
+                        <div class="doc-brand-name">HealthZone</div>
+                        <div class="doc-brand-sub">Medicinski informacijski sistem</div>
+                    </div>
+                </div>
+                <div class="doc-meta">
+                    <div class="doc-meta-title">Narudžba opreme</div>
+                    <div class="doc-meta-id">Zahtjev #@Model.ZahtjevId</div>
+                    <div class="doc-meta-date">Datum: @DateTime.Now.ToString("dd.MM.yyyy")</div>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="doc-status-row">
+                <span class="doc-status-badge">✔ Odobreno</span>
+                <span class="doc-status-label">Zahtjev je odobren i proslijeđen na realizaciju.</span>
+            </div>
+
+            <!-- Podaci o opremi -->
+            <div class="doc-section">
+                <div class="doc-section-title">Podaci o opremi</div>
+                <div class="doc-grid">
+                    <div class="doc-field">
+                        <span class="doc-field-label">Naziv opreme</span>
+                        <span class="doc-field-value">@Model.Naziv</span>
+                    </div>
+                    <div class="doc-field">
+                        <span class="doc-field-label">Kategorija</span>
+                        <span class="doc-field-value">@Model.Kategorija</span>
+                    </div>
+                    <div class="doc-field">
+                        <span class="doc-field-label">Vrsta zahtjeva</span>
+                        <span class="doc-field-value">@Model.VrstaZahtjeva</span>
+                    </div>
+                    <div class="doc-field">
+                        <span class="doc-field-label">Hitnost</span>
+                        <span class="doc-field-value">
+                            @{
+                                string badgeClass = Model.Hitnost switch
+                                {
+                                    HealthZone.Models.Hitnost.Nizak   => "badge-nizak",
+                                    HealthZone.Models.Hitnost.Srednji => "badge-srednji",
+                                    HealthZone.Models.Hitnost.Visok   => "badge-visok",
+                                    HealthZone.Models.Hitnost.Hitno   => "badge-hitno",
+                                    _ => "badge-nizak"
+                                };
+                            }
+                            <span class="badge @badgeClass">@Model.Hitnost</span>
+                        </span>
+                    </div>
+                    <div class="doc-field full">
+                        <span class="doc-field-label">Opis / Razlog zahtjeva</span>
+                        <span class="doc-field-value desc">@Model.Opis</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Podaci o podnosiocu -->
+            <div class="doc-section">
+                <div class="doc-section-title">Podnositelj zahtjeva</div>
+                <div class="doc-grid">
+                    <div class="doc-field">
+                        <span class="doc-field-label">Doktor</span>
+                        <span class="doc-field-value">
+                            @(Model.Doktor != null ? $"{Model.Doktor.Ime} {Model.Doktor.Prezime}" : Model.DoktorID)
+                        </span>
+                    </div>
+                    @if (Model.Doktor?.Specijalizacija != null)
+                    {
+                        <div class="doc-field">
+                            <span class="doc-field-label">Specijalizacija</span>
+                            <span class="doc-field-value">@Model.Doktor.Specijalizacija</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="doc-footer">
+                <div class="doc-footer-note">
+                    Dokument generisan automatski kroz HealthZone sistem.<br />
+                    @DateTime.Now.ToString("dd.MM.yyyy HH:mm")
+                </div>
+                <div class="doc-signature">
+                    <div class="doc-signature-line"></div>
+                    <div class="doc-signature-label">Potpis administratora</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

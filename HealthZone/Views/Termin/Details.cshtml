@@ -1,54 +1,109 @@
 @model HealthZone.Models.Termin
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalji termina";
+    bool jeAdmin = User.IsInRole("Administrator");
+    bool jeDoktor = User.IsInRole("Doktor");
+    bool jePacijent = User.IsInRole("Pacijent");
+
+    var badgeClass = Model.Status switch
+    {
+        HealthZone.Models.Status.Potvrdjen => "hz-badge-success",
+        HealthZone.Models.Status.Otkazan => "hz-badge-danger",
+        HealthZone.Models.Status.NaCekanju => "hz-badge-warning",
+        _ => "hz-badge-info"
+    };
+    var statusLabel = Model.Status switch
+    {
+        HealthZone.Models.Status.NaCekanju => "Na čekanju",
+        HealthZone.Models.Status.Potvrdjen => "Potvrđen",
+        HealthZone.Models.Status.Otkazan => "Otkazan",
+        HealthZone.Models.Status.Aktivan => "Aktivan",
+        _ => Model.Status.ToString()
+    };
 }
 
-<h1>Details</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<div>
-    <h4>Termin</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Datum)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Datum)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Vrijeme)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Vrijeme)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Doktor)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Doktor.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Pacijent)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Pacijent.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Usluga)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Usluga.UslugaId)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.TerminId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+    <div class="hz-header">
+        <div class="hz-logo">📅</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Detalji termina</h1>
+            <p class="hz-subtitle">Pregled svih informacija za odabrani termin.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <div class="hz-section-title">Podaci</div>
+        <div class="hz-grid">
+            <div class="hz-field">
+                <label asp-for="Datum" class="hz-label">Datum</label>
+                <div class="hz-input hz-readonly">@Model.Datum.ToString("dd.MM.yyyy")</div>
+            </div>
+            <div class="hz-field">
+                <label asp-for="Vrijeme" class="hz-label">Vrijeme</label>
+                <div class="hz-input hz-readonly">@Model.Vrijeme.ToString("HH:mm")</div>
+            </div>
+            <div class="hz-field">
+                <label asp-for="Status" class="hz-label">Status</label>
+                <div class="hz-input hz-readonly">
+                    <span class="hz-badge @badgeClass">@statusLabel</span>
+                </div>
+            </div>
+            <div class="hz-field">
+                <label asp-for="DoktorID" class="hz-label">Doktor</label>
+                <div class="hz-input hz-readonly">@(ViewBag.DoktorIme ?? "—")</div>
+            </div>
+            <div class="hz-field">
+                <label asp-for="PacijentID" class="hz-label">Pacijent</label>
+                <div class="hz-input hz-readonly">@(ViewBag.PacijentIme ?? "—")</div>
+            </div>
+            <div class="hz-field hz-full">
+                <label asp-for="UslugaID" class="hz-label">Usluga</label>
+                <div class="hz-input hz-readonly">@(ViewBag.UslugaNaziv ?? "—")</div>
+            </div>
+        </div>
+
+        <div class="hz-actions hz-actions-between">
+            <a asp-action="Index" class="hz-btn hz-btn-ghost">Nazad</a>
+            <div style="display:flex;gap:10px;align-items:center">
+
+                @if (jeDoktor || jeAdmin)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.TerminId" class="hz-btn hz-btn-ghost">✎ Uredi</a>
+                }
+
+                @* Potvrdi — samo Pacijent, samo NaCekanju *@
+                @if (jePacijent && Model.Status == HealthZone.Models.Status.NaCekanju)
+                {
+                    <form asp-action="OznaciAktivan" method="post" style="display:inline"
+                          onsubmit="return confirm('Potvrditi ovaj termin?')">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.TerminId" />
+                        <button type="submit" class="hz-btn hz-btn-success">✔ Potvrdi</button>
+                    </form>
+                }
+
+                @* Otkaži — Pacijent i Admin, nije već otkazan *@
+                @if ((jePacijent || jeAdmin) && Model.Status != HealthZone.Models.Status.Otkazan)
+                {
+                    <form asp-action="Otkazi" method="post" style="display:inline"
+                          onsubmit="return confirm('Sigurno otkazati ovaj termin?')">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.TerminId" />
+                        <button type="submit" class="hz-btn hz-btn-danger">✕ Otkaži</button>
+                    </form>
+                }
+
+                @if (jeAdmin)
+                {
+                    <a asp-action="Delete" asp-route-id="@Model.TerminId" class="hz-btn hz-btn-danger">🗑 Obriši</a>
+                }
+            </div>
+        </div>
+    </div>
 </div>

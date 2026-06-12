@@ -1,0 +1,313 @@
+﻿@{
+    ViewData["Title"] = "Prijava";
+}
+
+<style>
+    body, html {
+        background: #f0f4f8;
+        min-height: 100vh;
+    }
+
+    .auth-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+        background: #f0f4f8;
+    }
+
+    .auth-container {
+        width: 100%;
+        max-width: 480px;
+    }
+
+    .auth-heading {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+        .auth-heading h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .auth-heading p {
+            font-size: 15px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+    /* Tab switcher */
+    .auth-tabs {
+        display: flex;
+        background: #e5e9f0;
+        border-radius: 14px;
+        padding: 5px;
+        margin-bottom: 24px;
+        gap: 4px;
+    }
+
+    .auth-tab {
+        flex: 1;
+        text-align: center;
+        padding: 10px 0;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .2s;
+        color: #6b7280;
+        background: transparent;
+    }
+
+        .auth-tab.active {
+            background: #fff;
+            color: #111827;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+        }
+
+        .auth-tab:hover:not(.active) {
+            color: #374151;
+            text-decoration: none;
+        }
+
+    /* Card */
+    .auth-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 32px 28px;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+
+    /* Field */
+    .auth-field {
+        margin-bottom: 20px;
+    }
+
+    .auth-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .auth-input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .auth-input-icon {
+        position: absolute;
+        left: 14px;
+        color: #9ca3af;
+        font-size: 16px;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+    }
+
+    .auth-input {
+        width: 100%;
+        padding: 13px 16px 13px 42px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 15px;
+        color: #111827;
+        background: #fff;
+        outline: none;
+        transition: border-color .2s;
+    }
+
+        .auth-input:focus {
+            border-color: #0BA5A4;
+            box-shadow: 0 0 0 3px rgba(11,165,164,0.10);
+        }
+
+        .auth-input::placeholder {
+            color: #9ca3af;
+        }
+
+    /* Eye toggle */
+    .auth-eye {
+        position: absolute;
+        right: 14px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #9ca3af;
+        display: flex;
+        align-items: center;
+        padding: 4px;
+        font-size: 16px;
+    }
+
+        .auth-eye:hover {
+            color: #374151;
+        }
+
+    /* Remember me */
+    .auth-remember {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+
+        .auth-remember input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
+            accent-color: #0BA5A4;
+            cursor: pointer;
+        }
+
+        .auth-remember label {
+            font-size: 14px;
+            color: #6b7280;
+            cursor: pointer;
+            margin: 0;
+        }
+
+    /* Error alert */
+    .auth-alert {
+        background: #fef2f2;
+        border: 1.5px solid #fca5a5;
+        border-radius: 10px;
+        color: #b91c1c;
+        padding: 11px 14px;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    /* Submit */
+    .auth-btn {
+        width: 100%;
+        padding: 14px;
+        background: #0BA5A4;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background .2s, transform .1s;
+    }
+
+        .auth-btn:hover {
+            background: #099493;
+        }
+
+        .auth-btn:active {
+            transform: scale(0.98);
+        }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-container">
+
+        <div class="auth-heading">
+            <h1>Dobrodošli nazad</h1>
+            <p>Prijavite se na vaš nalog</p>
+        </div>
+
+        <div class="auth-tabs">
+            <a href="#" class="auth-tab active">Prijava</a>
+            <a asp-action="Register" asp-controller="Account" class="auth-tab">Registracija</a>
+        </div>
+
+        <div class="auth-card">
+
+            @if (ViewData["Greška"] != null)
+            {
+                <div class="auth-alert">⚠️ @ViewData["Greška"]</div>
+            }
+
+            <form method="post" asp-action="Login" asp-controller="Account" id="login-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                <div class="auth-field">
+                    <label class="auth-label">Email adresa</label>
+                    <div class="auth-input-wrap">
+                        <span class="auth-input-icon">
+                            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <rect x="2" y="4" width="20" height="16" rx="2" />
+                                <path d="m2 7 10 7 10-7" />
+                            </svg>
+                        </span>
+                        <input type="email" name="email" class="auth-input" placeholder="vas@email.com" required autocomplete="email" />
+                    </div>
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-label">Šifra</label>
+                    <div class="auth-input-wrap">
+                        <span class="auth-input-icon">
+                            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                        </span>
+                        <input type="password" name="lozinka" id="lozinka-input" class="auth-input" placeholder="••••••••" required autocomplete="current-password" />
+                        <button type="button" class="auth-eye" id="toggle-lozinka" title="Prikaži/sakrij šifru">
+                            <svg id="eye-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="auth-remember">
+                    <input type="checkbox" name="zapamtiMe" value="true" id="zapamti" />
+                    <label for="zapamti">Zapamti me</label>
+                </div>
+
+                <button type="submit" class="auth-btn">Prijava</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Prikaz/sakrivanje lozinke
+        document.getElementById('toggle-lozinka').addEventListener('click', function () {
+            var input = document.getElementById('lozinka-input');
+            var icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+            } else {
+                input.type = 'password';
+                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+            }
+        });
+
+        // Brojač grešaka — 3 neuspješna pokušaja → redirect na početnu
+        var brojPokusaja = 0;
+        var maxPokusaja = 3;
+
+        document.getElementById('login-form').addEventListener('submit', function (e) {
+            var email = this.querySelector('input[name="email"]').value.trim();
+            var lozinka = this.querySelector('input[name="lozinka"]').value;
+
+            if (!email || !lozinka) {
+                e.preventDefault();
+                brojPokusaja++;
+                var preostalo = maxPokusaja - brojPokusaja;
+                if (brojPokusaja >= maxPokusaja) {
+                    alert('Previše neuspješnih pokušaja. Bit ćete preusmjereni na početnu stranicu.');
+                    window.location.href = '/';
+                } else {
+                    alert('Molimo unesite email i šifru. Preostalo pokušaja: ' + preostalo);
+                }
+            }
+        });
+    </script>
+}

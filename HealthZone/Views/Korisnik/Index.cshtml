@@ -1,39 +1,435 @@
-﻿@model IEnumerable<HealthZone.Models.Korisnik>
+@model IEnumerable<HealthZone.Models.Korisnik>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Korisnici";
+    var ulogeMap = ViewBag.UlogeMap as Dictionary<string, string> ?? new Dictionary<string, string>();
 }
 
-<h1>Index</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<style>
+    .hz-filters {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Ime</th>
-            <th>Prezime</th>
-            <th>Email</th>
-            <th>Broj kartona</th>
-            <th>Akcije</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Ime</td>
-                <td>@item.Prezime</td>
-                <td>@item.Email</td>
-                <td>@item.BrojKartona</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-                </td>
-            </tr>
+        .hz-filters select {
+            height: 38px;
+            padding: 0 12px;
+            border-radius: 8px;
+            border: 1px solid var(--hz-border, #dde3ec);
+            background: #fff;
+            font-size: 13px;
+            color: var(--hz-text, #1a2236);
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+            min-width: 150px;
         }
-    </tbody>
-</table>
+
+            .hz-filters select:focus {
+                outline: none;
+                border-color: var(--hz-accent, #2563eb);
+            }
+
+    .hz-badge-role-doktor {
+        background: #e1f5ee;
+        color: #0f6e56;
+    }
+
+    .hz-badge-role-sestra {
+        background: #eeedfe;
+        color: #534ab7;
+    }
+
+    .hz-badge-role-pacijent {
+        background: #e6f1fb;
+        color: #185fa5;
+    }
+
+    .hz-badge-role-admin {
+        background: #f1efe8;
+        color: #5f5e5a;
+    }
+
+    .hz-badge-role-default {
+        background: #f1efe8;
+        color: #5f5e5a;
+    }
+
+    .hz-badge-pri-nizak {
+        background: #eaf3de;
+        color: #3b6d11;
+    }
+
+    .hz-badge-pri-srednji {
+        background: #faeeda;
+        color: #854f0b;
+    }
+
+    .hz-badge-pri-visok {
+        background: #fcebeb;
+        color: #a32d2d;
+    }
+
+    .hz-badge-spec {
+        background: #e1f5ee;
+        color: #0f6e56;
+    }
+
+    .hz-cell-empty {
+        color: #bbb;
+        font-size: 13px;
+    }
+
+    .hz-separator td {
+        background: #f7f8fa;
+        padding: 5px 14px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-top: 1px solid #eee;
+    }
+
+    .hz-no-results {
+        display: none;
+        text-align: center;
+        padding: 40px 20px;
+        color: #888;
+        font-size: 14px;
+    }
+
+    .hz-count-badge {
+        display: inline-block;
+        background: #e6f1fb;
+        color: #185fa5;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 99px;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+</style>
+
+<div class="hz-page">
+
+    <div class="hz-header">
+        <div class="hz-logo">👤</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Korisnici <span class="hz-count-badge" id="hz-count">@Model?.Count()</span></h1>
+            <p class="hz-subtitle">Upravljajte pacijentima, doktorima i administratorima HealthZone sistema.</p>
+        </div>
+    </div>
+
+    <div class="hz-toolbar">
+        <div class="hz-filters">
+            <div class="hz-search">
+                <input type="text" id="hz-filter" placeholder="Pretraži korisnike..." />
+            </div>
+
+            <select id="filter-uloga" title="Filtriraj po ulozi">
+                <option value="">Sve uloge</option>
+                <option value="Administrator">Administrator</option>
+                <option value="Doktor">Doktor</option>
+                <option value="MedicinskaSestra">Medicinska sestra</option>
+                <option value="Pacijent">Pacijent</option>
+            </select>
+
+            <select id="filter-spec" title="Filtriraj po specijalizaciji">
+                <option value="">Sve specijalizacije</option>
+                @foreach (var spec in Enum.GetValues(typeof(HealthZone.Models.Specijalizacija)))
+                {
+                    <option value="@spec">@spec</option>
+                }
+            </select>
+
+            <select id="filter-pri" title="Filtriraj po prioritetu">
+                <option value="">Svi prioriteti</option>
+                @foreach (var pri in Enum.GetValues(typeof(HealthZone.Models.Prioritet)))
+                {
+                    <option value="@pri">@pri</option>
+                }
+            </select>
+        </div>
+
+        <a asp-action="Create" class="hz-btn hz-btn-primary">+ Nova/i korisnika</a>
+    </div>
+
+    <div class="hz-table-wrap">
+        @if (Model != null && Model.Any())
+        {
+            <table class="hz-table">
+                <thead>
+                    <tr>
+                        <th>Korisnik</th>
+                        <th>Uloga</th>
+                        <th>Telefon</th>
+                        <th>Karton</th>
+                        <th id="th-spec">Specijalizacija</th>
+                        <th id="th-pri">Prioritet</th>
+                        <th style="text-align:right">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody id="hz-tbody">
+                    @{
+                        // Grupisanje po ulozi za separator redove
+                        var grupisano = Model
+                        .Select(k => new
+                        {
+                            Korisnik = k,
+                            Uloga = ulogeMap.ContainsKey(k.Id) ? ulogeMap[k.Id] : "—"
+                        })
+                        .Where(x => x.Uloga != "—") // Preskoči korisnike bez uloge
+                        .OrderBy(x => x.Uloga == "Administrator" ? 0 : x.Uloga == "Doktor" ? 1 : x.Uloga == "MedicinskaSestra" ? 2 : 3)
+                        .ThenBy(x => x.Korisnik.Prezime);
+
+                        string zadnjaGrupa = "";
+                    }
+                    @foreach (var stavka in grupisano)
+                    {
+                        var k = stavka.Korisnik;
+                        var uloga = stavka.Uloga;
+                        var inicijali = ((k.Ime?.Length > 0 ? k.Ime.Substring(0, 1) : "?") + (k.Prezime?.Length > 0 ? k.Prezime.Substring(0, 1) : "")).ToUpper();
+
+                        // Separator po grupi
+                        if (uloga != zadnjaGrupa)
+                        {
+                            zadnjaGrupa = uloga;
+                            <tr class="hz-separator" data-separator="true">
+                                <td colspan="7">@uloga</td>
+                            </tr>
+                        }
+
+                        // CSS klase za badge uloge
+                        var ulogaClass = uloga switch
+                        {
+                            "Doktor" => "hz-badge hz-badge-role-doktor",
+                            "MedicinskaSestra" => "hz-badge hz-badge-role-sestra",
+                            "Pacijent" => "hz-badge hz-badge-role-pacijent",
+                            "Administrator" => "hz-badge hz-badge-role-admin",
+                            _ => "hz-badge hz-badge-role-default"
+                        };
+
+                        // Pripremi vrijednosti za data atribute
+                        var specValue = k.Specijalizacija?.ToString() ?? "";
+                        var priValue = k.Prioritet?.ToString() ?? "";
+
+                        // CSS klase za prioritet
+                        var priClass = priValue switch
+                        {
+                            "Nizak" => "hz-badge hz-badge-pri-nizak",
+                            "Srednji" => "hz-badge hz-badge-pri-srednji",
+                            "Visok" => "hz-badge hz-badge-pri-visok",
+                            _ => "hz-badge"
+                        };
+
+                        <tr data-uloga="@uloga"
+                            data-spec="@specValue"
+                            data-pri="@priValue">
+
+                            <td data-label="Korisnik">
+                                <div class="hz-cell-user">
+                                    <span class="hz-avatar">@inicijali</span>
+                                    <div class="meta">
+                                        <b>@k.Ime @k.Prezime</b>
+                                        <span>@k.Email</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td data-label="Uloga">
+                                <span class="@ulogaClass">@uloga</span>
+                            </td>
+
+                            <td data-label="Telefon">
+                                @if (!string.IsNullOrEmpty(k.PhoneNumber))
+                                {
+                                    @k.PhoneNumber
+                                }
+                                else
+                                {
+                                    <span class="hz-cell-empty">—</span>
+                                }
+                            </td>
+
+                            <td data-label="Karton" style="font-family:ui-monospace,monospace;font-size:12px">
+                                @if (!string.IsNullOrEmpty(k.BrojKartona))
+                                {
+                                    @k.BrojKartona
+                                }
+                                else
+                                {
+                                    <span class="hz-cell-empty">—</span>
+                                }
+                            </td>
+
+                            <td class="hz-col-spec" data-label="Specijalizacija">
+                                @if (k.Specijalizacija != null && uloga == "Doktor")
+                                {
+                                    <span class="hz-badge hz-badge-spec">@k.Specijalizacija</span>
+                                }
+                                else
+                                {
+                                    <span class="hz-cell-empty">—</span>
+                                }
+                            </td>
+
+                            <td class="hz-col-pri" data-label="Prioritet">
+                                @if (k.Prioritet != null && uloga == "Pacijent")
+                                {
+                                    <span class="@priClass">@k.Prioritet</span>
+                                }
+                                else
+                                {
+                                    <span class="hz-cell-empty">—</span>
+                                }
+                            </td>
+
+                            <td class="hz-cell-actions" data-label="Akcije">
+                                @if (User.IsInRole("Administrator"))
+                                {
+                                    <a asp-action="Edit" asp-route-id="@k.Id" title="Uredi">✎</a>
+                                    <a asp-action="Delete" asp-route-id="@k.Id" class="danger" title="Obriši">🗑</a>
+                                }
+                                <a asp-action="Details" asp-route-id="@k.Id" title="Detalji">👁</a>
+                                @if (uloga == "Pacijent" && (User.IsInRole("Doktor") || User.IsInRole("Administrator")))
+                                {
+                                    <a asp-controller="Nalaz" asp-action="MedicinskiKarton"
+                                       asp-route-id="@k.Id" title="Medicinska historija">📋</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="hz-no-results" id="hz-no-results">
+                Nema korisnika koji odgovaraju odabranim filterima.
+            </div>
+        }
+        else
+        {
+            <div class="hz-empty">
+                <span class="icon">👤</span>
+                <h3 style="margin:0 0 6px;color:var(--hz-accent)">Još nema unosa</h3>
+                <p style="margin:0 0 18px">Kliknite na dugme iznad da kreirate prvu stavku.</p>
+                <a asp-action="Create" class="hz-btn hz-btn-primary">+ Dodaj prvi unos</a>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    (function () {
+        var searchInput = document.getElementById('hz-filter');
+        var filterUloga = document.getElementById('filter-uloga');
+        var filterSpec  = document.getElementById('filter-spec');
+        var filterPri   = document.getElementById('filter-pri');
+        var tbody       = document.getElementById('hz-tbody');
+        var noResults   = document.getElementById('hz-no-results');
+        var countBadge  = document.getElementById('hz-count');
+        var thSpec      = document.getElementById('th-spec');
+        var thPri       = document.getElementById('th-pri');
+
+        // Sakrij/prikaži kolonu i njen th
+        function setColVisible(th, cells, visible) {
+            if (th) th.style.display = visible ? '' : 'none';
+            cells.forEach(function (td) { td.style.display = visible ? '' : 'none'; });
+        }
+
+        function applyFilters() {
+            if (!tbody) return;
+
+            var q     = (searchInput?.value || '').toLowerCase().trim();
+            var uloga = (filterUloga?.value || '');
+            var ulogaL = uloga.toLowerCase();
+            var spec  = (filterSpec?.value  || '').toLowerCase();
+            var pri   = (filterPri?.value   || '').toLowerCase();
+
+            var rows = tbody.querySelectorAll('tr:not([data-separator])');
+            var visible = 0;
+
+            rows.forEach(function (tr) {
+                var rowUloga = (tr.dataset.uloga || '').toLowerCase();
+                var rowSpec  = (tr.dataset.spec  || '').toLowerCase();
+                var rowPri   = (tr.dataset.pri   || '').toLowerCase();
+                var rowText  = tr.textContent.toLowerCase();
+
+                var matchQ     = !q      || rowText.includes(q);
+                var matchUloga = !ulogaL || rowUloga === ulogaL;
+                var matchSpec  = !spec   || rowSpec  === spec;
+                var matchPri   = !pri    || rowPri   === pri;
+
+                var show = matchQ && matchUloga && matchSpec && matchPri;
+                tr.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            // Separator redovi: prikaži samo ako grupa ima barem jedan vidljiv red
+            tbody.querySelectorAll('tr[data-separator]').forEach(function (sep) {
+                var next = sep.nextElementSibling;
+                var hasVisible = false;
+                while (next && !next.hasAttribute('data-separator')) {
+                    if (next.style.display !== 'none') { hasVisible = true; break; }
+                    next = next.nextElementSibling;
+                }
+                sep.style.display = hasVisible ? '' : 'none';
+            });
+
+            // --- Skrivanje/prikazivanje kolona po odabranoj ulozi ---
+            var specCells = tbody.querySelectorAll('.hz-col-spec');
+            var priCells  = tbody.querySelectorAll('.hz-col-pri');
+
+            if (uloga === 'Doktor') {
+                // Samo specijalizacija, bez prioriteta
+                setColVisible(thSpec, specCells, true);
+                setColVisible(thPri,  priCells,  false);
+                if (filterSpec) filterSpec.style.display = '';
+                if (filterPri) filterPri.style.display = 'none';
+                if (filterPri) filterPri.value = '';
+            } else if (uloga === 'Pacijent') {
+                // Samo prioritet, bez specijalizacije
+                setColVisible(thSpec, specCells, false);
+                setColVisible(thPri,  priCells,  true);
+                if (filterSpec) filterSpec.style.display = 'none';
+                if (filterSpec) filterSpec.value = '';
+                if (filterPri) filterPri.style.display = '';
+            } else if (uloga === 'MedicinskaSestra' || uloga === 'Administrator') {
+                // Ni specijalizacija ni prioritet
+                setColVisible(thSpec, specCells, false);
+                setColVisible(thPri,  priCells,  false);
+                if (filterSpec) filterSpec.style.display = 'none';
+                if (filterSpec) filterSpec.value = '';
+                if (filterPri) filterPri.style.display = 'none';
+                if (filterPri) filterPri.value = '';
+            } else {
+                // Sve uloge — prikaži obje kolone i oba filtera
+                setColVisible(thSpec, specCells, true);
+                setColVisible(thPri,  priCells,  true);
+                if (filterSpec) filterSpec.style.display = '';
+                if (filterPri) filterPri.style.display = '';
+            }
+
+            // Broj vidljivih
+            if (countBadge) countBadge.textContent = visible;
+
+            // Poruka ako nema rezultata
+            if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+        }
+
+        searchInput?.addEventListener('input',  applyFilters);
+        filterUloga?.addEventListener('change', applyFilters);
+        filterSpec?.addEventListener('change',  applyFilters);
+        filterPri?.addEventListener('change',   applyFilters);
+
+        applyFilters();
+    })();
+</script>

@@ -39,9 +39,9 @@ namespace HealthZone.Models
 	public enum Hitnost
 	{
 		Nizak,
-		Visok,
         Srednji,
-		Hitno
+        Visok,
+        Hitno
     }
 
 

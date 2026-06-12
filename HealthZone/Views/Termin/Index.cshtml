@@ -1,65 +1,158 @@
 @model IEnumerable<HealthZone.Models.Termin>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Termini";
+    bool jePacijent = User.IsInRole("Pacijent");
+    bool jeDoktor = User.IsInRole("Doktor");
+    bool jeAdmin = User.IsInRole("Administrator");
 }
 
-<h1>Index</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Datum)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Vrijeme)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Doktor)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Pacijent)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Usluga)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Datum)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Vrijeme)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Doktor.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Pacijent.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Usluga.UslugaId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.TerminId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.TerminId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.TerminId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="hz-page">
+
+    <div class="hz-header">
+        <div class="hz-logo">📅</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Termini</h1>
+            <p class="hz-subtitle">Zakazivanje i upravljanje terminima pacijenata kod ljekara.</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="hz-alert hz-alert-success">✅ @TempData["Success"]</div>
+    }
+    @if (TempData["Greška"] != null)
+    {
+        <div class="hz-alert hz-alert-danger">⚠️ @TempData["Greška"]</div>
+    }
+
+    <div class="hz-toolbar">
+        <div class="hz-search">
+            <input type="text" id="hz-filter" placeholder="Pretraži termine..." />
+        </div>
+        <a asp-action="Create" class="hz-btn hz-btn-primary">+ Novi termin</a>
+    </div>
+
+    <div class="hz-table-wrap">
+        @if (Model != null && Model.Any())
+        {
+            <table class="hz-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Vrijeme</th>
+                        @if (!jePacijent)
+                        {
+                            <th>Pacijent</th>
+                        }
+                        @if (!jeDoktor)
+                        {
+                            <th>Doktor</th>
+                        }
+                        <th>Usluga</th>
+                        <th>Status</th>
+                        <th style="text-align:right">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody id="hz-tbody">
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td data-label="Datum">@item.Datum.ToString("dd.MM.yyyy")</td>
+                            <td data-label="Vrijeme">@item.Vrijeme.ToString("HH:mm")</td>
+                            @if (!jePacijent)
+                            {
+                                <td data-label="Pacijent">
+                                    @(item.Pacijent != null ? $"{item.Pacijent.Ime} {item.Pacijent.Prezime}" : "—")
+                                </td>
+                            }
+                            @if (!jeDoktor)
+                            {
+                                <td data-label="Doktor">
+                                    @(item.Doktor != null ? $"{item.Doktor.Ime} {item.Doktor.Prezime}" : "—")
+                                </td>
+                            }
+                            <td data-label="Usluga">@(item.Usluga?.Naziv ?? "—")</td>
+                            <td data-label="Status">
+                                @{
+                                    var badgeClass = item.Status switch
+                                    {
+                                        HealthZone.Models.Status.Potvrdjen => "hz-badge-success",
+                                        HealthZone.Models.Status.Otkazan => "hz-badge-danger",
+                                        HealthZone.Models.Status.NaCekanju => "hz-badge-warning",
+                                        _ => "hz-badge-info"
+                                    };
+                                    var statusLabel = item.Status switch
+                                    {
+                                        HealthZone.Models.Status.NaCekanju => "Na čekanju",
+                                        HealthZone.Models.Status.Potvrdjen => "Potvrđen",
+                                        HealthZone.Models.Status.Otkazan => "Otkazan",
+                                        HealthZone.Models.Status.Aktivan => "Aktivan",
+                                        _ => item.Status.ToString()
+                                    };
+                                }
+                                <span class="hz-badge @badgeClass">@statusLabel</span>
+                            </td>
+                            <td class="hz-cell-actions" data-label="Akcije">
+                                <a asp-action="Details" asp-route-id="@item.TerminId" title="Detalji">👁</a>
+
+                                @if (jeDoktor || jeAdmin)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.TerminId" title="Uredi">✎</a>
+                                }
+
+                                @* Potvrdi — samo Pacijent, samo NaCekanju *@
+                                @if (jePacijent && item.Status == HealthZone.Models.Status.NaCekanju)
+                                {
+                                    <form asp-action="OznaciAktivan" method="post" style="display:inline"
+                                          onsubmit="return confirm('Potvrditi ovaj termin?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.TerminId" />
+                                        <button type="submit" class="hz-icon-btn success" title="Potvrdi termin">✔</button>
+                                    </form>
+                                }
+
+                                @* Otkaži — Pacijent i Admin, nije već otkazan *@
+                                @if ((jePacijent || jeAdmin) && item.Status != HealthZone.Models.Status.Otkazan)
+                                {
+                                    <form asp-action="Otkazi" method="post" style="display:inline"
+                                          onsubmit="return confirm('Otkazati ovaj termin?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.TerminId" />
+                                        <button type="submit" class="hz-icon-btn danger" title="Otkaži">✕</button>
+                                    </form>
+                                }
+
+                                @if (jeAdmin)
+                                {
+                                    <a asp-action="Delete" asp-route-id="@item.TerminId" class="danger" title="Obriši">🗑</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="hz-empty">
+                <span class="icon">📅</span>
+                <h3 style="margin:0 0 6px;color:var(--hz-accent)">Još nema termina</h3>
+                <p style="margin:0 0 18px">Kliknite na dugme iznad da zakažete prvi termin.</p>
+                <a asp-action="Create" class="hz-btn hz-btn-primary">+ Zakaži termin</a>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    document.getElementById('hz-filter')?.addEventListener('input', function(e){
+        var q = e.target.value.toLowerCase();
+        document.querySelectorAll('#hz-tbody tr').forEach(function(tr){
+            tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+</script>

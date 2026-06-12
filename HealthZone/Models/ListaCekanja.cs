@@ -9,8 +9,10 @@ public class ListaCekanja
         public int ListaId { get; set; }
        
         [ForeignKey("Korisnik")]
+        [Display(Name = "Doktor")]
+        [Required(ErrorMessage = "Polje Doktor je obavezno.")]
         public string DoktorID { get; set; }
-        public Korisnik Doktor { get; set; }
+        public Korisnik? Doktor { get; set; }
 
     }
 }

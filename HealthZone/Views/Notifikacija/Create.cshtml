@@ -1,54 +1,61 @@
 @model HealthZone.Models.Notifikacija
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Novi notifikaciju";
 }
 
-<h1>Create</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h4>Notifikacija</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
 
-            <div class="form-group">
-                <label asp-for="Poruka" class="control-label"></label>
-                <input asp-for="Poruka" class="form-control" />
-                <span asp-validation-for="Poruka" class="text-danger"></span>
+    <div class="hz-header">
+        <div class="hz-logo">🔔</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Novi notifikaciju</h1>
+            <p class="hz-subtitle">Unesite podatke za novu stavku u HealthZone sistemu.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <form asp-action="Create" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            <div class="hz-section-title">Podaci</div>
+
+            <div class="hz-grid">
+        <div class="hz-field">
+            <label asp-for="TerminID" class="hz-label">Termin<span class="req">*</span></label>
+            <select asp-for="TerminID" class="hz-select" asp-items="ViewBag.TerminID as SelectList"><option value="">— Odaberite —</option></select>
+            <span asp-validation-for="TerminID" class="hz-error"></span>
+        </div>
+        <div class="hz-field">
+            <label asp-for="status" class="hz-label">Status</label>
+            <select asp-for="status" class="hz-select" asp-items="Html.GetEnumSelectList<Status>()"><option value="">— Odaberite —</option></select>
+            <span asp-validation-for="status" class="hz-error"></span>
+        </div>
+        <div class="hz-field">
+            <label asp-for="DatumSlanja" class="hz-label">Datum slanja<span class="req">*</span></label>
+            <input type="date" asp-for="DatumSlanja" class="hz-input" />
+            <span asp-validation-for="DatumSlanja" class="hz-error"></span>
+        </div>
+        <div class="hz-field hz-full">
+            <label asp-for="Poruka" class="hz-label">Poruka<span class="req">*</span></label>
+            <textarea asp-for="Poruka" placeholder="Sadržaj notifikacije..." class="hz-textarea"></textarea>
+            <span asp-validation-for="Poruka" class="hz-error"></span>
+        </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="DatumSlanja" class="control-label"></label>
-                <input asp-for="DatumSlanja" class="form-control" />
-                <span asp-validation-for="DatumSlanja" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="status" class="control-label"></label>
-                <input asp-for="status" class="form-control" />
-                <span asp-validation-for="status" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="TerminID" class="control-label"></label>
-                <input asp-for="TerminID" class="form-control" />
-                <span asp-validation-for="TerminID" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Termin" class="control-label"></label>
-                <input asp-for="Termin" class="form-control" />
-                <span asp-validation-for="Termin" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div class="hz-actions">
+                <a asp-action="Index" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-primary">Sačuvaj</button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

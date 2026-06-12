@@ -1,79 +1,231 @@
-﻿@model HealthZone.Models.Korisnik
+@model HealthZone.Models.Korisnik
+
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Uredi korisnika";
 }
+@{
+    string uloga = ViewBag.TrenutnaUloga as string ?? "";
+}
+@{
+    bool admin = User.IsInRole("Administrator");
+}
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h1>Edit</h1>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+    <div class="hz-header">
+        <div class="hz-logo">👤</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Uredi korisnika</h1>
+            <p class="hz-subtitle">Ažurirajte podatke postojeće stavke u HealthZone sistemu.</p>
+        </div>
+    </div>
 
-<h4>Korisnik</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
+    <div class="hz-card">
+        <form asp-action="Edit" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
             <input type="hidden" asp-for="Id" />
-            <input type="hidden" asp-for="PasswordHash" />
-            <input type="hidden" asp-for="UserName" />
-            <input type="hidden" asp-for="NormalizedUserName" />
-            <input type="hidden" asp-for="NormalizedEmail" />
-            <input type="hidden" asp-for="SecurityStamp" />
-            <input type="hidden" asp-for="ConcurrencyStamp" />
-            <input type="hidden" asp-for="BrojKartona" />
+            <input type="hidden" id="trenutnaUloga" value="@ViewBag.TrenutnaUloga" />
+            <div class="hz-section-title">Podaci</div>
 
-            <div class="form-group">
-                <label asp-for="Ime" class="control-label"></label>
-                <input asp-for="Ime" class="form-control" />
-                <span asp-validation-for="Ime" class="text-danger"></span>
+            <div class="hz-grid">
+                <div class="hz-field">
+                    <label asp-for="Ime" class="hz-label">Ime<span class="req">*</span></label>
+                    @if (admin)
+                    {
+                        <input type="text" asp-for="Ime" class="hz-input" />
+                    }
+                    else
+                    {
+                        <input type="text" asp-for="Ime" class="hz-input" readonly />
+                    }
+                    <span asp-validation-for="Ime" class="hz-error"></span>
+                </div>
+                <div class="hz-field">
+                    <label asp-for="Prezime" class="hz-label">Prezime<span class="req">*</span></label>
+                    @if (admin)
+                    {
+                        <input type="text" asp-for="Prezime" class="hz-input" />
+                    }
+                    else
+                    {
+                        <input type="text" asp-for="Prezime" class="hz-input" readonly />
+                    }
+                    <span asp-validation-for="Prezime" class="hz-error"></span>
+                </div>
+                <div class="hz-field">
+                    <label asp-for="Email" class="hz-label">Email<span class="req">*</span></label>
+                    <input type="email" asp-for="Email" placeholder="ime.prezime@healthzone.ba" class="hz-input" />
+                    <span asp-validation-for="Email" class="hz-error"></span>
+                </div>
+                <div class="hz-field">
+                    <label asp-for="PhoneNumber" class="hz-label">Broj telefona</label>
+                    <input type="tel" asp-for="PhoneNumber" placeholder="+387 61 000 000" class="hz-input" />
+                    <span asp-validation-for="PhoneNumber" class="hz-error"></span>
+                </div>
+                <div class="hz-field">
+                    <label class="hz-label">Nova lozinka</label>
+                    <input type="password" name="novaLozinka" id="novaLozinka" class="hz-input"
+                           placeholder="Ostavite prazno ako ne mijenjate" autocomplete="new-password" />
+                    <span class="hz-hint" style="font-size:12px;color:var(--color-text-secondary);margin-top:2px;">
+                        Unesite samo ako želite promijeniti lozinku.
+                    </span>
+                </div>
+                <div class="hz-field">
+                    <label class="hz-label">Potvrda lozinke</label>
+                    <input type="password" name="potvrdalozinke" id="potvrdalozinke" class="hz-input"
+                           placeholder="Ponovite novu lozinku" autocomplete="new-password" />
+                    <span id="lozinka-error" class="hz-error" style="display:none;">Lozinke se ne podudaraju.</span>
+                </div>
+
+                <div id="pacijent-polja">
+
+                    <div class="hz-field">
+                        <label asp-for="BrojKartona" class="hz-label">Broj kartona</label>
+                        @if (admin)
+                        {
+                            <input type="text" asp-for="BrojKartona" class="hz-input" />
+                        }
+                        else
+                        {
+                            <input type="text" asp-for="BrojKartona" class="hz-input" readonly />
+                        }
+                        <span asp-validation-for="BrojKartona" class="hz-error"></span>
+                    </div>
+
+                    <div class="hz-field">
+                        <label asp-for="Prioritet" class="hz-label">Prioritet</label>
+                        @if (admin)
+                        {
+                            <select asp-for="Prioritet" class="hz-select"
+                                    asp-items="Html.GetEnumSelectList<Prioritet>()">
+                                <option value="">— Odaberite —</option>
+                            </select>
+                        }
+                        else
+                        {
+                            <input type="text" value="@Model.Prioritet" class="hz-input" readonly />
+                        }
+                        <span asp-validation-for="Prioritet" class="hz-error"></span>
+                    </div>
+
+                </div>
+
+                <div id="doktor-polja">
+
+                    <div class="hz-field">
+                        <label asp-for="Specijalizacija" class="hz-label">Specijalizacija</label>
+                        @if (admin)
+                        {
+                            <select asp-for="Specijalizacija"
+                                    class="hz-select"
+                                    asp-items="Html.GetEnumSelectList<Specijalizacija>()">
+                                <option value="">— Odaberite —</option>
+                            </select>
+                        }
+                        else
+                        {
+                            <input type="text" value="@Model.Specijalizacija" class="hz-input" readonly />
+                        }
+                        <span asp-validation-for="Specijalizacija" class="hz-error"></span>
+                    </div>
+
+                </div>
+                <div class="hz-field">
+                    <label class="hz-label">Uloga</label>
+
+                    @if (admin)
+                    {
+                        <select name="uloga" id="uloga" class="hz-select">
+                            @foreach (var u in ViewBag.Uloge as SelectList)
+                            {
+                                if (u.Text == ViewBag.TrenutnaUloga as string)
+                                {
+                                    <option value="@u.Text" selected>@u.Text</option>
+                                }
+                                else
+                                {
+                                    <option value="@u.Text">@u.Text</option>
+                                }
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <input type="text"
+                               value="@ViewBag.TrenutnaUloga"
+                               class="hz-input"
+                               readonly />
+                    }
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Prezime" class="control-label"></label>
-                <input asp-for="Prezime" class="form-control" />
-                <span asp-validation-for="Prezime" class="text-danger"></span>
-            </div>
 
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="PhoneNumber" class="control-label"></label>
-                <input asp-for="PhoneNumber" class="form-control" />
-                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Prioritet" class="control-label"></label>
-                <select asp-for="Prioritet" class="form-control" asp-items="ViewBag.Prioriteti">
-                    <option value="">-- Odaberi --</option>
-                </select>
-                <span asp-validation-for="Prioritet" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Specijalizacija" class="control-label"></label>
-                <select asp-for="Specijalizacija" class="form-control" asp-items="ViewBag.Specijalizacije">
-                    <option value="">-- Odaberi --</option>
-                </select>
-                <span asp-validation-for="Specijalizacija" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+            <div class="hz-actions">
+                <a asp-action="Index" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-primary">Sačuvaj izmjene</button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+                function promijeniPolja() {
+
+            let element = document.getElementById("uloga");
+
+            let uloga = element
+                ? element.value
+                : document.getElementById("trenutnaUloga").value;
+
+            var pacijentPolja = document.getElementById("pacijent-polja");
+            var doktorPolja = document.getElementById("doktor-polja");
+
+            if (uloga === "Pacijent") {
+                pacijentPolja.style.display = "block";
+                doktorPolja.style.display = "none";
+            }
+            else if (uloga === "Doktor") {
+                pacijentPolja.style.display = "none";
+                doktorPolja.style.display = "block";
+            }
+            else {
+                pacijentPolja.style.display = "none";
+                doktorPolja.style.display = "none";
+            }
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+
+            promijeniPolja();
+
+            let select = document.getElementById("uloga");
+            if (select) {
+                select.addEventListener("change", promijeniPolja);
+            }
+
+            // Validacija lozinki pri submitu
+            document.querySelector("form").addEventListener("submit", function (e) {
+                var nova = document.getElementById("novaLozinka").value;
+                var potvrda = document.getElementById("potvrdalozinke").value;
+                var err = document.getElementById("lozinka-error");
+
+                if (nova && nova !== potvrda) {
+                    e.preventDefault();
+                    err.style.display = "block";
+                    document.getElementById("potvrdalozinke").focus();
+                } else {
+                    err.style.display = "none";
+                }
+            });
+
+            // Sakrij grešku čim korisnik počne kucati potvrdu
+            document.getElementById("potvrdalozinke").addEventListener("input", function () {
+                document.getElementById("lozinka-error").style.display = "none";
+            });
+        });
+    </script>
 }

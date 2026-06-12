@@ -1,50 +1,62 @@
 @model HealthZone.Models.MedicinskaUsluga
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Obriši — uslugu";
 }
 
-<h1>Delete</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>HealthZone.Models.MedicinskaUsluga</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Naziv)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Naziv)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Vrsta)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Vrsta)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Opis)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Opis)
-        </dd>
-    </dl>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Cijena)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Cijena)
-        </dd>
-    </dl>
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="UslugaId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+    <div class="hz-header">
+        <div class="hz-logo">🩺</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Obriši — uslugu</h1>
+            <p class="hz-subtitle">Potvrdite trajno brisanje stavke. Ova akcija se ne može poništiti.</p>
+        </div>
+    </div>
+
+        <div class="hz-warning-panel">
+            <div class="ic">⚠️</div>
+            <div>
+                <h4>Trajno brisanje</h4>
+                <p>Ova stavka će biti uklonjena iz HealthZone sistema. Povezani podaci mogu postati neispravni.</p>
+            </div>
+        </div>
+
+    <div class="hz-card">
+        <div class="hz-section-title">Podaci</div>
+        <div class="hz-grid">
+        <div class="hz-field">
+            <label asp-for="Naziv" class="hz-label">Naziv usluge<span class="req">*</span></label>
+            <div class="hz-input hz-readonly">@Model.Naziv</div>
+            
+        </div>
+        <div class="hz-field">
+            <label asp-for="Vrsta" class="hz-label">Vrsta / Specijalizacija<span class="req">*</span></label>
+            <div class="hz-input hz-readonly">@Model.Vrsta</div>
+            
+        </div>
+        <div class="hz-field">
+            <label asp-for="Cijena" class="hz-label">Cijena (KM)<span class="req">*</span></label>
+            <div class="hz-input hz-readonly">@Model.Cijena</div>
+            
+        </div>
+        <div class="hz-field hz-full">
+            <label asp-for="Opis" class="hz-label">Opis</label>
+            <div class="hz-input hz-readonly" style="min-height:60px;white-space:pre-wrap">@Model.Opis</div>
+            
+        </div>
+        </div>
+
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="UslugaId" />
+            <div class="hz-actions hz-actions-between">
+                <a asp-action="Index" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-danger">Da, obriši trajno</button>
+            </div>
+        </form>
+    </div>
 </div>

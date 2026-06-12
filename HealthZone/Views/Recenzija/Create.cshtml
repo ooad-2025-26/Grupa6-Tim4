@@ -1,56 +1,136 @@
 @model HealthZone.Models.Recenzija
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Nova recenzija";
+    var doktorList = ViewData["DoktorID"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
 }
 
-<h1>Create</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h4>Recenzija</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Komentar" class="control-label"></label>
-                <input asp-for="Komentar" class="form-control" />
-                <span asp-validation-for="Komentar" class="text-danger"></span>
+<style>
+    .star-group {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 4px;
+    }
+
+        .star-group input {
+            display: none;
+        }
+
+        .star-group label {
+            font-size: 32px;
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+            .star-group input:checked ~ label,
+            .star-group label:hover,
+            .star-group label:hover ~ label {
+                color: #f5a623;
+            }
+
+        .star-group input:checked + label {
+            color: #f5a623;
+        }
+
+    .ocjena-blok {
+        background: #f8fcfa;
+        border: 1px solid #e0ede8;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-bottom: 4px;
+    }
+
+    .ocjena-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #3a5a4a;
+        margin-bottom: 6px;
+    }
+</style>
+
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+    <div class="hz-header">
+        <div class="hz-logo">⭐</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Nova recenzija</h1>
+            <p class="hz-subtitle">Ocijenite doktora i pomozite drugim pacijentima.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <form asp-action="Create" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <div class="hz-field">
+                <label asp-for="DoktorID" class="hz-label">Doktor<span class="req">*</span></label>
+                <select asp-for="DoktorID" class="hz-select" asp-items="doktorList">
+                    <option value="">— Odaberite doktora —</option>
+                </select>
+                <span asp-validation-for="DoktorID" class="hz-error"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="OcjenaLjubaznosti" class="control-label"></label>
-                <input asp-for="OcjenaLjubaznosti" class="form-control" />
-                <span asp-validation-for="OcjenaLjubaznosti" class="text-danger"></span>
+
+            <div class="hz-field">
+                <div class="ocjena-blok">
+                    <div class="ocjena-label">Ljubaznost</div>
+                    <div class="star-group">
+                        @for (int i = 5; i >= 1; i--)
+                        {
+                            <input type="radio" name="OcjenaLjubaznosti" id="lj@(i)" value="@i" @(Model?.OcjenaLjubaznosti == i ? "checked" : "") />
+                            <label for="lj@(i)" title="@i">★</label>
+                        }
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="OcjenaProfesionalnosti" class="control-label"></label>
-                <input asp-for="OcjenaProfesionalnosti" class="form-control" />
-                <span asp-validation-for="OcjenaProfesionalnosti" class="text-danger"></span>
+
+            <div class="hz-field">
+                <div class="ocjena-blok">
+                    <div class="ocjena-label">Profesionalnost</div>
+                    <div class="star-group">
+                        @for (int i = 5; i >= 1; i--)
+                        {
+                            <input type="radio" name="OcjenaProfesionalnosti" id="pr@(i)" value="@i" @(Model?.OcjenaProfesionalnosti == i ? "checked" : "") />
+                            <label for="pr@(i)" title="@i">★</label>
+                        }
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="OcjenaUsluge" class="control-label"></label>
-                <input asp-for="OcjenaUsluge" class="form-control" />
-                <span asp-validation-for="OcjenaUsluge" class="text-danger"></span>
+
+            <div class="hz-field">
+                <div class="ocjena-blok">
+                    <div class="ocjena-label">Kvalitet usluge</div>
+                    <div class="star-group">
+                        @for (int i = 5; i >= 1; i--)
+                        {
+                            <input type="radio" name="OcjenaUsluge" id="us@(i)" value="@i" @(Model?.OcjenaUsluge == i ? "checked" : "") />
+                            <label for="us@(i)" title="@i">★</label>
+                        }
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="PacijentID" class="control-label"></label>
-                <select asp-for="PacijentID" class ="form-control" asp-items="ViewBag.PacijentID"></select>
+
+            <div class="hz-field">
+                <label asp-for="Komentar" class="hz-label">Komentar</label>
+                <textarea asp-for="Komentar" class="hz-input" rows="4" placeholder="Opišite vaše iskustvo..."></textarea>
+                <span asp-validation-for="Komentar" class="hz-error"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="DoktorID" class="control-label"></label>
-                <select asp-for="DoktorID" class ="form-control" asp-items="ViewBag.DoktorID"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+
+            <div class="hz-actions">
+                <a asp-action="Index" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-primary">Pošalji recenziju</button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

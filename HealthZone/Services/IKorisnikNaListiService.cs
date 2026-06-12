@@ -10,7 +10,7 @@ namespace HealthZone.Services
         void Update(KorisnikNaListi korisnikNaListi);
         void Delete(KorisnikNaListi korisnikNaListi);
         Task<int> SaveChangesAsync();
-
+        Task<IEnumerable<Korisnik>> GetPacijentiSaTerminomAsync(string doktorId);
         Task<IEnumerable<ListaCekanja>> GetListeCekanjaAsync();
         Task<IEnumerable<Korisnik>> GetKorisniciAsync();
     }

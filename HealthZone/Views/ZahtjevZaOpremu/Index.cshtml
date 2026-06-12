@@ -1,71 +1,148 @@
-﻿@model IEnumerable<HealthZone.Models.ZahtjevZaOpremu>
+@model IEnumerable<HealthZone.Models.ZahtjevZaOpremu>
+@using HealthZone.Models
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Zahtjevi za opremu";
 }
 
-<h1>Index</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Naziv)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Opis)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Doktor)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.VrstaZahtjeva)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Kategorija)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Hitnost)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Naziv)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Opis)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Doktor.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.VrstaZahtjeva)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Kategorija)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Hitnost)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ZahtjevId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ZahtjevId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ZahtjevId">Delete</a>
-            </td>
-        </tr>
+@* ── Helper: CSS klasa za Status badge ────────────────────────────────── *@
+@{
+    string StatusClass(Status s) => s switch
+    {
+        Status.Aktivan => "hz-badge-info",
+        Status.NaCekanju => "hz-badge-warning",
+        Status.Potvrdjen => "hz-badge-success",
+        Status.Otkazan => "hz-badge-danger",
+        _ => "hz-badge-neutral"
+    };
+
+    string HitnostClass(Hitnost h) => h switch
+    {
+        Hitnost.Nizak => "hz-badge-neutral",
+        Hitnost.Srednji => "hz-badge-warning",
+        Hitnost.Visok => "hz-badge-danger",
+        Hitnost.Hitno => "hz-badge-danger",
+        _ => "hz-badge-neutral"
+    };
 }
-    </tbody>
-</table>
+
+<div class="hz-page">
+
+    <div class="hz-header">
+        <div class="hz-logo">🛠️</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Zahtjevi za opremu</h1>
+            <p class="hz-subtitle">Zahtjevi doktora za nabavku, servis ili zamjenu opreme.</p>
+        </div>
+    </div>
+
+    @* ── TempData greška (Odobri / Odbij fail) ─────────────────────────── *@
+    @if (TempData["Greška"] != null)
+    {
+        <div class="hz-alert hz-alert-danger">⚠️ @TempData["Greška"]</div>
+    }
+
+    <div class="hz-toolbar">
+        <div class="hz-search">
+            <input type="text" id="hz-filter" placeholder="Pretraži zahtjeve za opremu..." />
+        </div>
+        @if (User.IsInRole("Doktor"))
+        {
+            <a asp-action="Create" class="hz-btn hz-btn-primary">+ Novi zahtjev</a>
+        }
+    </div>
+
+    <div class="hz-table-wrap">
+        @if (Model != null && Model.Any())
+        {
+            <table class="hz-table">
+                <thead>
+                    <tr>
+                        <th>Naziv</th>
+                        <th>Doktor</th>
+                        <th>Vrsta</th>
+                        <th>Kategorija</th>
+                        <th>Hitnost</th>
+                        <th>Status</th>
+                        <th style="text-align:right">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody id="hz-tbody">
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td data-label="Naziv">
+                                <b style="color:var(--hz-accent)">@item.Naziv</b>
+                            </td>
+                            <td data-label="Doktor">
+    @(item.Doktor != null ? $"{item.Doktor.Ime} {item.Doktor.Prezime}" : item.DoktorID)
+</td>
+                            <td data-label="Vrsta">
+                                <span class="hz-badge hz-badge-info">@item.VrstaZahtjeva</span>
+                            </td>
+                            <td data-label="Kategorija">
+                                <span class="hz-badge hz-badge-neutral">@item.Kategorija</span>
+                            </td>
+                            <td data-label="Hitnost">
+                                <span class="hz-badge @HitnostClass(item.Hitnost)">@item.Hitnost</span>
+                            </td>
+                            <td data-label="Status">
+                                <span class="hz-badge @StatusClass(item.Status)">@item.Status</span>
+                            </td>
+                            <td class="hz-cell-actions" data-label="Akcije">
+                                <a asp-action="Details" asp-route-id="@item.ZahtjevId" title="Detalji">👁</a>
+
+                                @if (User.IsInRole("Doktor") && item.Status == Status.NaCekanju
+                                                        && item.DoktorID == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.ZahtjevId" title="Uredi">✎</a>
+                                    <a asp-action="Delete" asp-route-id="@item.ZahtjevId" class="danger" title="Obriši">🗑</a>
+                                }
+
+                                @if (User.IsInRole("Administrator") && item.Status == Status.NaCekanju)
+                                {
+                                    <form asp-action="Odobri" method="post" style="display:inline"
+                                          onsubmit="return confirm('Odobri zahtjev «@item.Naziv»?')">
+                                        <input type="hidden" name="id" value="@item.ZahtjevId" />
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="hz-icon-btn hz-icon-btn-success" title="Odobri">✔</button>
+                                    </form>
+                                    <form asp-action="Odbij" method="post" style="display:inline"
+                                          onsubmit="return confirm('Odbij zahtjev «@item.Naziv»?')">
+                                        <input type="hidden" name="id" value="@item.ZahtjevId" />
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="hz-icon-btn hz-icon-btn-danger" title="Odbij">✘</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="hz-empty">
+                <span class="icon">🛠️</span>
+                <h3 style="margin:0 0 6px;color:var(--hz-accent)">Još nema zahtjeva</h3>
+                <p style="margin:0 0 18px">Kliknite na dugme iznad da podnesete prvi zahtjev.</p>
+                @if (User.IsInRole("Doktor"))
+                {
+                    <a asp-action="Create" class="hz-btn hz-btn-primary">+ Novi zahtjev</a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    document.getElementById('hz-filter')?.addEventListener('input', function (e) {
+        var q = e.target.value.toLowerCase();
+        document.querySelectorAll('#hz-tbody tr').forEach(function (tr) {
+            tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+</script>

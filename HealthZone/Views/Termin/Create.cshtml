@@ -1,55 +1,426 @@
 @model HealthZone.Models.Termin
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Novi termin";
+    bool jePacijent = User.IsInRole("Pacijent");
+    bool jeDoktor = User.IsInRole("Doktor");
+    bool jeAdmin = User.IsInRole("Administrator");
+    var doktorList = ViewData["DoktorID"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var pacijentList = ViewData["PacijentID"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var uslugaList = ViewData["UslugaID"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+
+    // Kad je doktor ulogovan, njegov ID dolazi iz ViewBag (postavlja ga controller)
+    string ulogovanDoktorId = jeDoktor ? (ViewBag.UlogovanDoktorId as string ?? "") : "";
 }
 
-<h1>Create</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h4>Termin</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Datum" class="control-label"></label>
-                <input asp-for="Datum" class="form-control" />
-                <span asp-validation-for="Datum" class="text-danger"></span>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+    <div class="hz-header">
+        <div class="hz-logo">📅</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Novi termin</h1>
+            <p class="hz-subtitle">
+                @if (jePacijent)
+                {
+                    <text>Odaberite doktora, uslugu, datum i vrijeme.</text>
+                }
+                else if (jeDoktor)
+                {
+                    <text>Odaberite pacijenta, uslugu, datum i vrijeme.</text>
+                }
+                else
+                {
+                    <text>Unesite podatke za novi termin.</text>
+                }
+            </p>
+        </div>
+    </div>
+
+    @* Prikaz TempData poruka *@
+    @if (TempData["Success"] != null)
+    {
+        <div class="hz-alert hz-alert-success">✅ @TempData["Success"]</div>
+    }
+    @if (TempData["Info"] != null)
+    {
+        <div class="hz-alert hz-alert-info">ℹ️ @TempData["Info"]</div>
+    }
+
+    <div class="hz-card">
+        <form asp-controller="Termin" asp-action="Create" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            <div class="hz-section-title">Podaci</div>
+
+            <div class="hz-grid">
+
+                <div class="hz-field">
+                    <label asp-for="Datum" class="hz-label">Datum<span class="req">*</span></label>
+                    <input type="text" id="datum-picker" class="hz-input" placeholder="Odaberite datum..." autocomplete="off" readonly />
+                    <input type="hidden" asp-for="Datum" id="datum-hidden" />
+                    <span asp-validation-for="Datum" class="hz-error"></span>
+                </div>
+
+                <div class="hz-field">
+                    <label asp-for="Vrijeme" class="hz-label">Vrijeme<span class="req">*</span></label>
+                    <div id="time-slots-wrap">
+                        <p id="time-hint" style="font-size:13px;color:#888;margin:4px 0">
+                            @(jeDoktor ? "Prvo odaberite datum." : "Prvo odaberite datum i doktora.")
+                        </p>
+                        <div id="time-slots" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px"></div>
+                    </div>
+                    <input type="hidden" asp-for="Vrijeme" id="vrijeme-hidden" />
+                    @if (ViewData.ModelState.ContainsKey("Vrijeme") &&
+                                        ViewData.ModelState["Vrijeme"]!.Errors.Any())
+                    {
+                        <p class="hz-error-msg-custom">
+                            ⚠️ @ViewData.ModelState["Vrijeme"]!.Errors.First().ErrorMessage
+                        </p>
+                    }
+                </div>
+
+                @* Kad je doktor ulogovan, njegov ID se šalje kao hidden field — nema select za doktora *@
+                @if (jeDoktor)
+                {
+                    <input type="hidden" id="doktor-id-hidden" value="@ulogovanDoktorId" />
+                }
+
+                @if (jePacijent || jeAdmin)
+                {
+                    <div class="hz-field">
+                        <label asp-for="DoktorID" class="hz-label">Doktor<span class="req">*</span></label>
+                        <select asp-for="DoktorID" class="hz-select" asp-items="doktorList">
+                            <option value="">— Odaberite doktora —</option>
+                        </select>
+                        <span asp-validation-for="DoktorID" class="hz-error"></span>
+                    </div>
+                }
+
+                @if (jeDoktor || jeAdmin)
+                {
+                    <div class="hz-field">
+                        <label asp-for="PacijentID" class="hz-label">Pacijent<span class="req">*</span></label>
+                        <select asp-for="PacijentID" class="hz-select" asp-items="pacijentList">
+                            <option value="">— Odaberite pacijenta —</option>
+                        </select>
+                        <span asp-validation-for="PacijentID" class="hz-error"></span>
+                    </div>
+                }
+
+                <div class="hz-field hz-full">
+                    <label asp-for="UslugaID" class="hz-label">Usluga<span class="req">*</span></label>
+                    <select asp-for="UslugaID" class="hz-select" asp-items="uslugaList">
+                        <option value="">— Odaberite uslugu —</option>
+                    </select>
+                    <span asp-validation-for="UslugaID" class="hz-error"></span>
+                </div>
+
             </div>
-            <div class="form-group">
-                <label asp-for="Vrijeme" class="control-label"></label>
-                <input asp-for="Vrijeme" class="form-control" />
-                <span asp-validation-for="Vrijeme" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <select asp-for="Status" class="form-control"></select>
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DoktorID" class="control-label"></label>
-                <select asp-for="DoktorID" class ="form-control" asp-items="ViewBag.DoktorID"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="PacijentID" class="control-label"></label>
-                <select asp-for="PacijentID" class ="form-control" asp-items="ViewBag.PacijentID"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="UslugaID" class="control-label"></label>
-                <select asp-for="UslugaID" class ="form-control" asp-items="ViewBag.UslugaID"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+
+            @* Lista čekanja — prikazuje se samo pacijentima kad je cijeli mjesec zauzet *@
+            @if (jePacijent)
+            {
+                <div id="lista-cekanja-wrap" style="display:none; margin: 16px 0; padding: 16px 20px;
+                         background: #fffbea; border: 1.5px solid #f0c040; border-radius: 12px;">
+                    <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
+                        <input type="checkbox"
+                               name="dodajNaListu"
+                               id="dodaj-na-listu"
+                               value="true"
+                               style="width:18px; height:18px; margin-top:2px; accent-color:#0BA5A4; flex-shrink:0;" />
+                        <div>
+                            <span style="font-weight:600; color:#7a5c00; font-size:14px;">
+                                📋 Svi termini u ovom mjesecu su zauzeti
+                            </span>
+                            <p style="font-size:12px; color:#9a7500; margin:4px 0 0 0; line-height:1.5;">
+                                Označite ovu opciju da se dodate na listu čekanja.
+                                Bićete kontaktirani čim se oslobodi termin kod ovog doktora.
+                            </p>
+                        </div>
+                    </label>
+                </div>
+            }
+
+            <div class="hz-actions">
+                <a asp-controller="Termin" asp-action="Index" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" id="submit-btn" class="hz-btn hz-btn-primary">Zakaži termin</button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/bs.js"></script>
+
+    <style>
+        .slot-btn {
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1.5px solid #d0e4f0;
+            background: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            color: #185fa5;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+            .slot-btn:hover {
+                background: #e6f1fb;
+                border-color: #0BA5A4;
+            }
+
+            .slot-btn.selected {
+                background: #0BA5A4;
+                color: #fff;
+                border-color: #0BA5A4;
+            }
+
+            .slot-btn.zauzet {
+                background: #fdecea;
+                color: #c0392b;
+                border-color: #f5c6c6;
+                cursor: not-allowed;
+                text-decoration: line-through;
+                opacity: .6;
+            }
+
+        .flatpickr-day.zauzet-dan {
+            background: #fdecea !important;
+            color: #c0392b !important;
+            border-color: #f5c6c6 !important;
+        }
+
+            .flatpickr-day.zauzet-dan:hover {
+                background: #f5c6c6 !important;
+            }
+
+        .time-slots-error-wrap {
+            border: 1.5px solid #e24b4a;
+            border-radius: 10px;
+            padding: 10px;
+            background: #fcebeb;
+        }
+
+        .hz-error-msg-custom {
+            font-size: 12px;
+            color: #a32d2d;
+            margin-top: 6px;
+        }
+
+        .hz-alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .hz-alert-success {
+            background: #eafaf1;
+            border: 1.5px solid #6fcf97;
+            color: #1a6b3a;
+        }
+
+        .hz-alert-info {
+            background: #eaf4ff;
+            border: 1.5px solid #7ec8f5;
+            color: #0a4a80;
+        }
+    </style>
+
+    <script>
+        var sviSlotovi = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00'];
+        var zauzetiSlotovi = [];
+        var zauzetiDani = [];
+        var odabraniDatum = null;
+        var jePacijent = @(jePacijent ? "true" : "false");
+        var jeDoktor = @(jeDoktor ? "true" : "false");
+
+        function getDoktorId() {
+            var sel = document.getElementById('DoktorID');
+            if (sel) return sel.value;
+            var hidden = document.getElementById('doktor-id-hidden');
+            if (hidden) return hidden.value;
+            return '';
+        }
+
+        // Učitaj zauzete dane za doktora
+        function ucitajZauzeteDane(doktorId, callback) {
+            if (!doktorId) { callback([]); return; }
+            fetch('/Termin/GetZauzetiDani?doktorId=' + encodeURIComponent(doktorId))
+                .then(function(r) { return r.json(); })
+                .then(function(data) { callback(data.zauzetiDani || []); })
+                .catch(function() { callback([]); });
+        }
+
+        // Provjeri da li je cijeli odabrani mjesec zauzet (samo za pacijente)
+        function provjeriMjesecZauzet(doktorId, datum) {
+            var wrap = document.getElementById('lista-cekanja-wrap');
+            if (!wrap || !jePacijent) return;
+
+            if (!doktorId || !datum) {
+                wrap.style.display = 'none';
+                document.getElementById('dodaj-na-listu').checked = false;
+                return;
+            }
+
+            var d = new Date(datum);
+            var godina = d.getFullYear();
+            var mjesec = d.getMonth() + 1;
+
+            fetch('/Termin/GetMjesecZauzet?doktorId=' + encodeURIComponent(doktorId)
+                + '&godina=' + godina + '&mjesec=' + mjesec)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.zauzet) {
+                        wrap.style.display = '';
+                    } else {
+                        wrap.style.display = 'none';
+                        document.getElementById('dodaj-na-listu').checked = false;
+                    }
+                })
+                .catch(function() {
+                    wrap.style.display = 'none';
+                });
+        }
+
+        // Ažuriraj tekst submit dugmeta ovisno o checkboxu
+        function azurirajDugme() {
+            var btn = document.getElementById('submit-btn');
+            if (!btn || !jePacijent) return;
+            var cb = document.getElementById('dodaj-na-listu');
+            if (cb && cb.checked) {
+                btn.textContent = '📋 Dodaj na listu čekanja';
+            } else {
+                btn.textContent = 'Zakaži termin';
+            }
+        }
+
+        // Poveži checkbox s promjenom teksta dugmeta
+        var cbLista = document.getElementById('dodaj-na-listu');
+        if (cbLista) {
+            cbLista.addEventListener('change', azurirajDugme);
+        }
+
+        // Učitaj slobodne slotove za datum + doktor
+        function ucitajSlotove(datum, doktorId) {
+            var wrap = document.getElementById('time-slots');
+            var hint = document.getElementById('time-hint');
+            wrap.innerHTML = '';
+            document.getElementById('vrijeme-hidden').value = '';
+
+            if (!datum || !doktorId) {
+                hint.textContent = jeDoktor ? 'Prvo odaberite datum.' : 'Prvo odaberite datum i doktora.';
+                hint.style.display = '';
+                return;
+            }
+
+            hint.textContent = 'Učitavam slobodne termine...';
+            hint.style.display = '';
+
+            fetch('/Termin/GetZauzetiSlotovi?datum=' + datum + '&doktorId=' + encodeURIComponent(doktorId))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    zauzetiSlotovi = data.zauzetiSlotovi || [];
+                    hint.style.display = 'none';
+                    wrap.innerHTML = '';
+
+                    sviSlotovi.forEach(function(slot) {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.textContent = slot;
+                        btn.className = 'slot-btn';
+
+                        var zauzet = zauzetiSlotovi.indexOf(slot) !== -1;
+                        if (zauzet) {
+                            btn.classList.add('zauzet');
+                            btn.disabled = true;
+                            btn.title = 'Termin zauzet';
+                        } else {
+                            btn.addEventListener('click', function() {
+                                document.querySelectorAll('.slot-btn').forEach(function(b) {
+                                    b.classList.remove('selected');
+                                });
+                                btn.classList.add('selected');
+                                document.getElementById('vrijeme-hidden').value = slot + ':00';
+                            });
+                        }
+                        wrap.appendChild(btn);
+                    });
+
+                    if (zauzetiSlotovi.length === sviSlotovi.length) {
+                        hint.textContent = '⚠️ Nema slobodnih termina za ovaj dan.';
+                        hint.style.display = '';
+                    }
+                })
+                .catch(function() {
+                    hint.textContent = 'Greška pri učitavanju termina.';
+                    hint.style.display = '';
+                });
+        }
+
+        // Inicijalizacija Flatpickr
+        var fp = flatpickr('#datum-picker', {
+            locale: 'bs',
+            minDate: 'today',
+            dateFormat: 'd.m.Y',
+            disableMobile: true,
+            onDayCreate: function(dObj, dStr, fp, dayElem) {
+                var d = dayElem.dateObj;
+                var key = d.getFullYear() + '-' +
+                    String(d.getMonth()+1).padStart(2,'0') + '-' +
+                    String(d.getDate()).padStart(2,'0');
+                if (zauzetiDani.indexOf(key) !== -1) {
+                    dayElem.classList.add('zauzet-dan');
+                    dayElem.title = 'Svi termini zauzeti';
+                }
+            },
+            onChange: function(selectedDates, dateStr) {
+                if (!selectedDates.length) return;
+                var d = selectedDates[0];
+                var iso = d.getFullYear() + '-' +
+                    String(d.getMonth()+1).padStart(2,'0') + '-' +
+                    String(d.getDate()).padStart(2,'0');
+                document.getElementById('datum-hidden').value = iso;
+                odabraniDatum = iso;
+                ucitajSlotove(iso, getDoktorId());
+                provjeriMjesecZauzet(getDoktorId(), iso);
+            }
+        });
+
+        // Kad se mijenja doktor — osvježi kalendar, slotove i provjeru liste
+        var doktorSel = document.getElementById('DoktorID');
+        if (doktorSel) {
+            doktorSel.addEventListener('change', function() {
+                var doktorId = this.value;
+                ucitajZauzeteDane(doktorId, function(dani) {
+                    zauzetiDani = dani;
+                    fp.redraw();
+                });
+                if (odabraniDatum) {
+                    ucitajSlotove(odabraniDatum, doktorId);
+                    provjeriMjesecZauzet(doktorId, odabraniDatum);
+                }
+            });
+        }
+
+        // Ako je doktor već predodabran (npr. doktor koji je ulogovan)
+        var initDoktor = getDoktorId();
+        if (initDoktor) {
+            ucitajZauzeteDane(initDoktor, function(dani) {
+                zauzetiDani = dani;
+                fp.redraw();
+            });
+        }
+    </script>
 }

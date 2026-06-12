@@ -1,52 +1,54 @@
 @model HealthZone.Models.Notifikacija
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalji notifikaciju";
 }
 
-<h1>Details</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<div>
-    <h4>Notifikacija</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Poruka)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Poruka)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DatumSlanja)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DatumSlanja)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.status)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TerminID)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TerminID)
-        </dd>
-    </dl>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Termin)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Termin)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.NotifikacijaId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+    <div class="hz-header">
+        <div class="hz-logo">🔔</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Detalji notifikaciju</h1>
+            <p class="hz-subtitle">Pregled svih informacija za odabranu stavku.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <div class="hz-section-title">Podaci</div>
+        <div class="hz-grid">
+        <div class="hz-field">
+            <label asp-for="TerminID" class="hz-label">Termin<span class="req">*</span></label>
+            <div class="hz-input hz-readonly">@Model.TerminID</div>
+            
+        </div>
+        <div class="hz-field">
+            <label asp-for="status" class="hz-label">Status</label>
+            <div class="hz-input hz-readonly">@Model.status</div>
+            
+        </div>
+        <div class="hz-field">
+            <label asp-for="DatumSlanja" class="hz-label">Datum slanja<span class="req">*</span></label>
+            <div class="hz-input hz-readonly">@Model.DatumSlanja.ToString("dd.MM.yyyy")</div>
+            
+        </div>
+        <div class="hz-field hz-full">
+            <label asp-for="Poruka" class="hz-label">Poruka<span class="req">*</span></label>
+            <div class="hz-input hz-readonly" style="min-height:60px;white-space:pre-wrap">@Model.Poruka</div>
+            
+        </div>
+        </div>
+
+        <div class="hz-actions hz-actions-between">
+            <a asp-action="Index" class="hz-btn hz-btn-ghost">Nazad</a>
+            <div style="display:flex;gap:10px">
+                <a asp-action="Edit" asp-route-id="@Model.NotifikacijaId" class="hz-btn hz-btn-ghost">Uredi</a>
+                <a asp-action="Delete" asp-route-id="@Model.NotifikacijaId" class="hz-btn hz-btn-danger">Obriši</a>
+            </div>
+        </div>
+    </div>
 </div>

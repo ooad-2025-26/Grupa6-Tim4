@@ -17,12 +17,20 @@ namespace HealthZone.Repositories
 
         public async Task<Nalaz?> GetByIdAsync(int id)
         {
-            return await _nalazi.FindAsync(id);
+            return await _nalazi
+                .Include(n => n.Pacijent)
+                .Include(n => n.Termin)
+                    .ThenInclude(t => t!.Usluga)
+                .FirstOrDefaultAsync(n => n.NalazId == id);
         }
 
         public async Task<IEnumerable<Nalaz>> GetAllAsync()
         {
-            return await _nalazi.ToListAsync();
+            return await _nalazi
+                .Include(n => n.Pacijent)
+                .Include(n => n.Termin)
+                    .ThenInclude(t => t!.Usluga)
+                .ToListAsync();
         }
 
         public async Task AddAsync(Nalaz nalaz)

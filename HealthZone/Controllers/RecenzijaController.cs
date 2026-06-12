@@ -1,13 +1,9 @@
-using HealthZone.Data;
-using HealthZone.Models;
+﻿using HealthZone.Models;
 using HealthZone.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HealthZone.Controllers
 {
@@ -15,164 +11,143 @@ namespace HealthZone.Controllers
     {
         private readonly IRecenzijaService _recenzijaService;
         private readonly IKorisnikService _korisnikService;
+        private readonly UserManager<Korisnik> _userManager;
 
         public RecenzijaController(
             IRecenzijaService recenzijaService,
-            IKorisnikService korisnikService)
+            IKorisnikService korisnikService,
+            UserManager<Korisnik> userManager)
         {
             _recenzijaService = recenzijaService;
             _korisnikService = korisnikService;
+            _userManager = userManager;
         }
 
-        // GET: Recenzija
+        // GET: Recenzija � javno dostupno svima
         public async Task<IActionResult> Index()
         {
             var recenzije = await _recenzijaService.GetAllAsync();
             return View(recenzije);
         }
 
-        // GET: Recenzija/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: Recenzija/RecenzijeDoktora/{id} – javno dostupno, recenzije određenog doktora
+        public async Task<IActionResult> RecenzijeDoktora(string id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            var doktor = await _korisnikService.GetDoktorByIdAsync(id);
+            if (doktor == null) return NotFound();
 
-            var recenzija = await _recenzijaService.GetByIdAsync(id.Value);
-            if (recenzija == null)
-            {
-                return NotFound();
-            }
+            var recenzije = await _recenzijaService.GetRecenzijeDoktoraAsync(id);
+            var ocjene = await _recenzijaService.GetProsjecneOcjeneAsync(id);
 
-            return View(recenzija);
+            ViewBag.Doktor = doktor;
+            ViewBag.Ocjene = new
+            {
+                ocjene.Ljubaznost,
+                ocjene.Profesionalnost,
+                ocjene.Usluga,
+                ocjene.Ukupno
+            };
+
+            ViewBag.MozeOstaviti = User.IsInRole("Pacijent");
+
+            return View(recenzije);
+        }
+
+        // GET: Recenzija/MojeRecenzije � doktor vidi svoje ocjene
+        [Authorize(Roles = "Doktor")]
+        public async Task<IActionResult> MojeRecenzije()
+        {
+            var doktor = await _userManager.GetUserAsync(User);
+            var recenzije = await _recenzijaService.GetRecenzijeDoktoraAsync(doktor!.Id);
+            var ocjene = await _recenzijaService.GetProsjecneOcjeneAsync(doktor.Id);
+
+            ViewBag.Ocjene = new
+            {
+                ocjene.Ljubaznost,
+                ocjene.Profesionalnost,
+                ocjene.Usluga,
+                ocjene.Ukupno
+            };
+
+            return View(recenzije);
         }
 
         // GET: Recenzija/Create
-        public async Task<IActionResult> Create()
+        [Authorize(Roles = "Pacijent")]
+        public async Task<IActionResult> Create(string? doktorId = null)
         {
-            await PopuniDropDownListe();
+            var doktori = await _korisnikService.GetDoktoriAsync();
+
+            ViewData["DoktorID"] = new SelectList(
+                doktori.Select(d => new
+                {
+                    d.Id,
+                    PunoIme = d.Ime + " " + d.Prezime
+                }),
+                "Id",
+                "PunoIme",
+                doktorId
+            );
             return View();
         }
 
         // POST: Recenzija/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("RecenzijaId,Komentar,OcjenaLjubaznosti,OcjenaProfesionalnosti,OcjenaUsluge,PacijentID,DoktorID")] Recenzija recenzija)
+        [Authorize(Roles = "Pacijent")]
+        public async Task<IActionResult> Create([Bind("Komentar,OcjenaLjubaznosti,OcjenaProfesionalnosti,OcjenaUsluge,DoktorID")] Recenzija recenzija)
         {
-            if (ModelState.IsValid)
-            {
-               await _recenzijaService.AddAsync(recenzija);
-                await _recenzijaService.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            await PopuniDropDownListe(recenzija.DoktorID, recenzija.PacijentID);
-            return View(recenzija);
-        }
+            var pacijent = await _userManager.GetUserAsync(User);
+            recenzija.PacijentID = pacijent!.Id;
 
-        // GET: Recenzija/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var recenzija = await _recenzijaService.GetByIdAsync(id.Value);
-            if (recenzija == null)
-            {
-                return NotFound();
-            }
-            await PopuniDropDownListe(recenzija.DoktorID, recenzija.PacijentID);
-            return View(recenzija);
-        }
-
-        // POST: Recenzija/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("RecenzijaId,Komentar,OcjenaLjubaznosti,OcjenaProfesionalnosti,OcjenaUsluge,PacijentID,DoktorID")] Recenzija recenzija)
-        {
-            if (id != recenzija.RecenzijaId)
-            {
-                return NotFound();
-            }
+            ModelState.Remove("PacijentID");
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _recenzijaService.Update(recenzija);
-                    await _recenzijaService.SaveChangesAsync();
+                    await _recenzijaService.AddAsync(recenzija);
+                    TempData["Uspjeh"] = "Recenzija je uspje�no dodana.";
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (Exception ex)
                 {
-                    if (! await RecenzijaExists(recenzija.RecenzijaId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    ModelState.AddModelError("", ex.Message);
                 }
-                return RedirectToAction(nameof(Index));
             }
-            await PopuniDropDownListe(recenzija.DoktorID, recenzija.PacijentID);
+
+            var doktori = await _korisnikService.GetDoktoriAsync();
+            ViewData["DoktorID"] = new SelectList(
+                doktori.Select(d => new
+                {
+                    d.Id,
+                    PunoIme = d.Ime + " " + d.Prezime
+                }),
+                "Id",
+                "PunoIme",
+                recenzija.DoktorID
+                );
             return View(recenzija);
         }
 
-        // GET: Recenzija/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var recenzija = await _recenzijaService.GetByIdAsync(id.Value);
-
-            if (recenzija == null)
-            {
-                return NotFound();
-            }
-
-            return View(recenzija);
-        }
-
-        // POST: Recenzija/Delete/5
+        // POST: Recenzija/Delete
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Pacijent")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var recenzija = await _recenzijaService.GetByIdAsync(id);
             if (recenzija != null)
             {
+                var korisnik = await _userManager.GetUserAsync(User);
+                if (!User.IsInRole("Administrator") && recenzija.PacijentID != korisnik!.Id)
+                {
+                    return Forbid();
+                }
                 _recenzijaService.Delete(recenzija);
                 await _recenzijaService.SaveChangesAsync();
             }
-
             return RedirectToAction(nameof(Index));
-        }
-
-        private async Task<bool> RecenzijaExists(int id)
-        {
-            var recenzija = await _recenzijaService.GetByIdAsync(id);
-            return recenzija != null;
-        }
-
-        private async Task PopuniDropDownListe(string? selectedDoktorId = null, string? selectedPacijentId = null)
-        {
-            // Dohvati doktore i pacijente preko servisa
-            var doktori = await _korisnikService.GetDoktoriAsync();
-            var pacijenti = await _korisnikService.GetPacijentiAsync();
-
-            // Popuni dropdown liste - prikazujemo Ime (ili Ime + Prezime)
-            ViewData["DoktorID"] = new SelectList(doktori, "Id", "Ime", selectedDoktorId);
-            ViewData["PacijentID"] = new SelectList(pacijenti, "Id", "Ime", selectedPacijentId);
         }
     }
 }

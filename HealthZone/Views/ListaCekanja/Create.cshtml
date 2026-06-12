@@ -1,36 +1,44 @@
 @model HealthZone.Models.ListaCekanja
-
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Nova lista čekanja";
 }
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h1>Create</h1>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+    <div class="hz-header">
+        <div class="hz-logo">📋</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Nova lista čekanja</h1>
+            <p class="hz-subtitle">Lista čekanja bit će automatski vezana za vaš doktorski račun.</p>
+        </div>
+    </div>
+    <div class="hz-card">
+        <form asp-action="Create" asp-controller="ListaCekanja" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
 
-<h4>ListaCekanja</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <div class="form-group">
-                <label asp-for="DoktorID" class="control-label"></label>
-                <input asp-for="DoktorID" class="form-control" />
-                <span asp-validation-for="DoktorID" class="text-danger"></span>
+            <div style="background:#e6f1fb;border:1px solid #b3d4f5;border-radius:10px;
+                        padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start">
+                <div style="font-size:20px;line-height:1">ℹ️</div>
+                <div style="font-size:13px;color:#185fa5;line-height:1.5">
+                    <b>Automatska dodjela:</b> Lista čekanja će biti kreirana za vaš račun.
+                    Možete joj početi dodavati pacijente odmah nakon kreiranja.
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Doktor" class="control-label"></label>
-                <input asp-for="Doktor" class="form-control" />
-                <span asp-validation-for="Doktor" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div class="hz-actions">
+                <a asp-action="Index" asp-controller="ListaCekanja" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-primary">
+                    Kreiraj listu
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

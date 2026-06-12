@@ -10,5 +10,8 @@ namespace HealthZone.Services
         void Update(Nalaz nalaz);
         void Delete(Nalaz nalaz);
         Task<int> SaveChangesAsync();
+        Task<IEnumerable<Nalaz>> GetNalaziPacijentaAsync(string pacijentId);
+
+        Task<string> GenerirajHtmlZaPrintAsync(int nalazId);
     }
 }

@@ -1,81 +1,128 @@
-﻿@model HealthZone.Models.Korisnik
+@model HealthZone.Models.Korisnik
+
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Novi korisnika";
 }
 
-<h1>Create</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h4>Korisnik</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
 
-            <div class="form-group">
-                <label asp-for="Ime" class="control-label"></label>
-                <input asp-for="Ime" class="form-control" />
-                <span asp-validation-for="Ime" class="text-danger"></span>
+    <div class="hz-header">
+        <div class="hz-logo">👤</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Novi korisnika</h1>
+            <p class="hz-subtitle">Unesite podatke za novu stavku u HealthZone sistemu.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <form asp-action="Create" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            <div class="hz-section-title">Podaci</div>
+
+            <div class="hz-grid">
+        <div class="hz-field">
+            <label asp-for="Ime" class="hz-label">Ime<span class="req">*</span></label>
+            <input type="text" asp-for="Ime" placeholder="npr. Amila" class="hz-input" />
+            <span asp-validation-for="Ime" class="hz-error"></span>
+        </div>
+        <div class="hz-field">
+            <label asp-for="Prezime" class="hz-label">Prezime<span class="req">*</span></label>
+            <input type="text" asp-for="Prezime" placeholder="npr. Hodžić" class="hz-input" />
+            <span asp-validation-for="Prezime" class="hz-error"></span>
+        </div>
+        <div class="hz-field">
+            <label asp-for="Email" class="hz-label">Email<span class="req">*</span></label>
+            <input type="email" asp-for="Email" placeholder="ime.prezime@healthzone.ba" class="hz-input" />
+            <span asp-validation-for="Email" class="hz-error"></span>
+        </div>
+        <div class="hz-field">
+            <label asp-for="PhoneNumber" class="hz-label">Broj telefona</label>
+            <input type="tel" asp-for="PhoneNumber" placeholder="+387 61 000 000" class="hz-input" />
+            <span asp-validation-for="PhoneNumber" class="hz-error"></span>
+        </div>
+                <div class="hz-field" id="brojKartonaDiv">
+                    <label asp-for="BrojKartona" class="hz-label">Broj kartona</label>
+                    <input type="text" asp-for="BrojKartona" placeholder="HZ-2024-00001" class="hz-input" />
+                    <span asp-validation-for="BrojKartona" class="hz-error"></span>
+                </div>
+                <div class="hz-field" id="specijalizacijaDiv">
+                    <label asp-for="Specijalizacija" class="hz-label">Specijalizacija</label>
+                    <select asp-for="Specijalizacija" class="hz-select"
+                            asp-items="Html.GetEnumSelectList<Specijalizacija>()">
+                        <option value="">— Odaberite —</option>
+                    </select>
+                    <span asp-validation-for="Specijalizacija" class="hz-error"></span>
+                </div>
+                <div class="hz-field" id="prioritetDiv">
+                    <label asp-for="Prioritet" class="hz-label">Prioritet</label>
+                    <select asp-for="Prioritet" class="hz-select"
+                            asp-items="Html.GetEnumSelectList<Prioritet>()">
+                        <option value="">— Odaberite —</option>
+                    </select>
+                    <span asp-validation-for="Prioritet" class="hz-error"></span>
+                </div>
+        <div class="hz-field">
+            <label for="uloga" class="hz-label">Uloga</label>
+                    <select name="uloga" id="uloga" class="hz-select"><option value="Pacijent">Pacijent</option><option value="Doktor">Doktor</option><option value="Administrator">Administrator</option><option value="MedicinskaSestra">Medicinska sestra</option></select>
+            <span class="hz-error" data-valmsg-for="uloga" data-valmsg-replace="true"></span>
+        </div>
+        <div class="hz-field hz-full">
+            <label for="lozinka" class="hz-label">Lozinka<span class="req">*</span></label>
+            <input type="password" name="lozinka" id="lozinka" required placeholder="Minimalno 8 karaktera" class="hz-input" />
+            <span class="hz-error" data-valmsg-for="lozinka" data-valmsg-replace="true"></span>
+        </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Prezime" class="control-label"></label>
-                <input asp-for="Prezime" class="form-control" />
-                <span asp-validation-for="Prezime" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="PhoneNumber" class="control-label"></label>
-                <input asp-for="PhoneNumber" class="form-control" />
-                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="lozinka" class="control-label">Lozinka</label>
-                <input type="password" name="lozinka" id="lozinka" class="form-control" />
-            </div>
-
-            <div class="form-group">
-                <label asp-for="BrojKartona" class="control-label"></label>
-                <input asp-for="BrojKartona" class="form-control" />
-                <span asp-validation-for="BrojKartona" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Prioritet" class="control-label"></label>
-                <select asp-for="Prioritet" class="form-control" asp-items="ViewBag.Prioriteti">
-                    <option value="">-- Odaberi --</option>
-                </select>
-                <span asp-validation-for="Prioritet" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Specijalizacija" class="control-label"></label>
-                <select asp-for="Specijalizacija" class="form-control" asp-items="ViewBag.Specijalizacije">
-                    <option value="">-- Odaberi --</option>
-                </select>
-                <span asp-validation-for="Specijalizacija" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div class="hz-actions">
+                <a asp-action="Index" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-primary">Sačuvaj</button>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        function promijeniPolja() {
+
+            let uloga = document.getElementById("uloga").value;
+
+            // sakrij sve
+            document.getElementById("brojKartonaDiv").style.display = "none";
+            document.getElementById("specijalizacijaDiv").style.display = "none";
+            document.getElementById("prioritetDiv").style.display = "none";
+
+            // Pacijent
+            if (uloga === "Pacijent") {
+                document.getElementById("brojKartonaDiv").style.display = "block";
+                document.getElementById("prioritetDiv").style.display = "block";
+            }
+
+            // Doktor
+            else if (uloga === "Doktor") {
+                document.getElementById("specijalizacijaDiv").style.display = "block";
+            }
+
+            // Administrator i MedicinskaSestra
+            // ništa se ne prikazuje
+        }
+
+               document.addEventListener("DOMContentLoaded", function () {
+
+            promijeniPolja();
+
+            document
+                .getElementById("uloga")
+                .addEventListener("change", promijeniPolja);
+
+        });
+    </script>
 }

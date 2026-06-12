@@ -13,5 +13,8 @@ namespace HealthZone.Services
 
         Task<IEnumerable<Korisnik>> GetDoktoriAsync();
 
+        Task OdobriZahtjevAsync(int zahtjevId);
+        Task OdbijZahtjevAsync(int zahtjevId);
+
     }
 }

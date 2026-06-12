@@ -1,59 +1,292 @@
 @model IEnumerable<HealthZone.Models.KorisnikNaListi>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Pacijenti na listi čekanja";
+
+    var grupisano = Model?
+        .GroupBy(k => k.ListaID)
+        .OrderBy(g => g.Key)
+        .ToList() ?? new List<IGrouping<int, HealthZone.Models.KorisnikNaListi>>();
+
+    var listeIds = Model?
+        .Select(k => k.ListaID)
+        .Distinct()
+        .OrderBy(id => id)
+        .ToList() ?? new List<int>();
 }
 
-<h1>Index</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Datum)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ListaID)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Lista)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.KorisnikID)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Korisnik)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.Datum)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.ListaID)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Lista)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.KorisnikID)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Korisnik)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.KorisnikNaListiID">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.KorisnikNaListiID">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.KorisnikNaListiID">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<style>
+    .hz-count-badge {
+        display: inline-block;
+        background: #e6f1fb;
+        color: #185fa5;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 99px;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+
+    .hz-no-results {
+        display: none;
+        text-align: center;
+        padding: 40px 20px;
+        color: #888;
+        font-size: 14px;
+    }
+
+    .hz-badge-pri-nizak {
+        background: #eaf3de;
+        color: #3b6d11;
+    }
+
+    .hz-badge-pri-srednji {
+        background: #faeeda;
+        color: #854f0b;
+    }
+
+    .hz-badge-pri-visok {
+        background: #fcebeb;
+        color: #a32d2d;
+    }
+
+    .hz-rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: 700;
+        background: #e6f1fb;
+        color: #185fa5;
+    }
+
+        .hz-rank-badge.rank-1 {
+            background: #ffd700;
+            color: #7a5900;
+        }
+
+        .hz-rank-badge.rank-2 {
+            background: #e8e8e8;
+            color: #555;
+        }
+
+        .hz-rank-badge.rank-3 {
+            background: #f0dcc4;
+            color: #7a4a1e;
+        }
+
+    .hz-filters {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+        .hz-filters select {
+            height: 38px;
+            padding: 0 30px 0 12px;
+            border-radius: 8px;
+            border: 1px solid var(--hz-border,#dde3ec);
+            background: #fff;
+            font-size: 13px;
+            color: var(--hz-text,#1a2236);
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            min-width: 160px;
+        }
+
+    .hz-separator td {
+        background: #f7f8fa;
+        padding: 5px 14px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-top: 1px solid #eee;
+    }
+</style>
+
+<div class="hz-page">
+    <div class="hz-header">
+        <div class="hz-logo">🕐</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Pacijenti na listi čekanja <span class="hz-count-badge" id="hz-count">@(Model?.Count() ?? 0)</span></h1>
+            <p class="hz-subtitle">Prikaz svih pacijenata na listama čekanja, sortirani po prioritetu i datumu prijave.</p>
+        </div>
+    </div>
+
+    <div class="hz-toolbar">
+        <div class="hz-filters">
+            <div class="hz-search">
+                <input type="text" id="hz-filter" placeholder="Pretraži pacijente..." />
+            </div>
+            <select id="filter-lista">
+                <option value="">Sve liste</option>
+                @foreach (var listaId in listeIds)
+                {
+                    <option value="@listaId">Lista #@listaId</option>
+                }
+            </select>
+            <select id="filter-pri">
+                <option value="">Svi prioriteti</option>
+                @foreach (var pri in Enum.GetValues(typeof(HealthZone.Models.Prioritet)))
+                {
+                    <option value="@pri">@pri</option>
+                }
+            </select>
+        </div>
+        <a asp-controller="KorisnikNaListi" asp-action="Create" class="hz-btn hz-btn-primary">+ Dodaj pacijenta</a>
+    </div>
+
+    <div class="hz-table-wrap">
+        @if (grupisano.Any())
+        {
+            <table class="hz-table">
+                <thead>
+                    <tr>
+                        <th style="width:50px">Redni br.</th>
+                        <th>Pacijent</th>
+                        <th>Prioritet</th>
+                        <th>Datum prijave</th>
+                        <th>Lista čekanja</th>
+                        <th style="text-align:right">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody id="hz-tbody">
+                    @foreach (var grupa in grupisano)
+                    {
+                        var sortiraniUGrupi = grupa
+                        .OrderByDescending(k => (int)(k.Korisnik?.Prioritet ?? HealthZone.Models.Prioritet.Nizak))
+                        .ThenBy(k => k.Datum)
+                        .ToList();
+
+                        <tr class="hz-separator" data-separator="true">
+                            <td colspan="6">Lista čekanja #@grupa.Key</td>
+                        </tr>
+
+                        for (int i = 0; i < sortiraniUGrupi.Count; i++)
+                        {
+                            var stavka = sortiraniUGrupi[i];
+                            var rank = i + 1;
+                            var rankClass = rank == 1 ? "rank-1" : rank == 2 ? "rank-2" : rank == 3 ? "rank-3" : "";
+                            var pacijent = stavka.Korisnik;
+                            var inicijali = ((pacijent?.Ime?.Length > 0 ? pacijent.Ime.Substring(0, 1) : "?")
+                            + (pacijent?.Prezime?.Length > 0 ? pacijent.Prezime.Substring(0, 1) : "")).ToUpper();
+
+                            var priStr = pacijent?.Prioritet?.ToString() ?? "";
+                            var priClass = priStr switch
+                            {
+                                "Nizak" => "hz-badge hz-badge-pri-nizak",
+                                "Srednji" => "hz-badge hz-badge-pri-srednji",
+                                "Visok" => "hz-badge hz-badge-pri-visok",
+                                _ => "hz-badge"
+                            };
+
+                            <tr data-lista="@stavka.ListaID" data-pri="@priStr.ToLower()">
+                                <td data-label="Redni br.">
+                                    <span class="hz-rank-badge @rankClass">@rank</span>
+                                </td>
+                                <td data-label="Pacijent">
+                                    <div class="hz-cell-user">
+                                        <span class="hz-avatar">@inicijali</span>
+                                        <div class="meta">
+                                            <b>@pacijent?.Ime @pacijent?.Prezime</b>
+                                            <span>@pacijent?.Email</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td data-label="Prioritet">
+                                    @if (!string.IsNullOrEmpty(priStr))
+                                    {
+                                        <span class="@priClass">@priStr</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:#bbb;font-size:13px">—</span>
+                                    }
+                                </td>
+                                <td data-label="Datum prijave" style="font-size:13px;color:#555">
+                                    @stavka.Datum.ToString("dd.MM.yyyy HH:mm")
+                                </td>
+                                <td data-label="Lista čekanja">
+                                    <span style="font-family:ui-monospace,monospace;font-size:13px;color:#185fa5;font-weight:600">#@stavka.ListaID</span>
+                                </td>
+                                <td class="hz-cell-actions" data-label="Akcije">
+                                    <a asp-controller="KorisnikNaListi" asp-action="Details" asp-route-id="@stavka.KorisnikNaListiID" title="Detalji">👁</a>
+                                    <a asp-controller="KorisnikNaListi" asp-action="Delete" asp-route-id="@stavka.KorisnikNaListiID" class="danger" title="Ukloni s liste">🗑</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+            <div class="hz-no-results" id="hz-no-results">Nema pacijenata koji odgovaraju odabranim filterima.</div>
+        }
+        else
+        {
+            <div class="hz-empty">
+                <span class="icon">🕐</span>
+                <h3 style="margin:0 0 6px;color:var(--hz-accent)">Još nema pacijenata na listama čekanja</h3>
+                <p style="margin:0 0 18px">Kliknite na dugme iznad da dodate prvog pacijenta.</p>
+                <a asp-controller="KorisnikNaListi" asp-action="Create" class="hz-btn hz-btn-primary">+ Dodaj pacijenta</a>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    (function () {
+        var searchInput = document.getElementById('hz-filter');
+        var filterLista = document.getElementById('filter-lista');
+        var filterPri   = document.getElementById('filter-pri');
+        var tbody       = document.getElementById('hz-tbody');
+        var noResults   = document.getElementById('hz-no-results');
+        var countBadge  = document.getElementById('hz-count');
+
+        function applyFilters() {
+            if (!tbody) return;
+            var q     = (searchInput?.value || '').toLowerCase().trim();
+            var lista = (filterLista?.value || '');
+            var pri   = (filterPri?.value   || '').toLowerCase();
+            var rows  = tbody.querySelectorAll('tr:not([data-separator])');
+            var visible = 0;
+
+            rows.forEach(function (tr) {
+                var show = (!q     || tr.textContent.toLowerCase().includes(q))
+                        && (!lista || tr.dataset.lista === lista)
+                        && (!pri   || tr.dataset.pri   === pri);
+                tr.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            tbody.querySelectorAll('tr[data-separator]').forEach(function (sep) {
+                var next = sep.nextElementSibling;
+                var hasVisible = false;
+                while (next && !next.hasAttribute('data-separator')) {
+                    if (next.style.display !== 'none') { hasVisible = true; break; }
+                    next = next.nextElementSibling;
+                }
+                sep.style.display = hasVisible ? '' : 'none';
+            });
+
+            if (countBadge) countBadge.textContent = visible;
+            if (noResults)  noResults.style.display = visible === 0 ? 'block' : 'none';
+        }
+
+        searchInput?.addEventListener('input',  applyFilters);
+        filterLista?.addEventListener('change', applyFilters);
+        filterPri?.addEventListener('change',   applyFilters);
+        applyFilters();
+    })();
+</script>

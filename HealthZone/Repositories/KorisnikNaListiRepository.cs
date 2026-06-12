@@ -17,12 +17,20 @@ namespace HealthZone.Repositories
 
         public async Task<KorisnikNaListi?> GetByIdAsync(int id)
         {
-            return await _korisniciNaListi.FindAsync(id);
+            return await _korisniciNaListi
+                .Include(k => k.Korisnik)
+                .Include(k => k.Lista)
+                    .ThenInclude(l => l!.Doktor)
+                .FirstOrDefaultAsync(k => k.KorisnikNaListiID == id);
         }
 
         public async Task<IEnumerable<KorisnikNaListi>> GetAllAsync()
         {
-            return await _korisniciNaListi.ToListAsync();
+            return await _korisniciNaListi
+                .Include(k => k.Korisnik)
+                .Include(k => k.Lista)
+                    .ThenInclude(l => l!.Doktor)
+                .ToListAsync();
         }
 
         public async Task AddAsync(KorisnikNaListi korisnikNaListi)

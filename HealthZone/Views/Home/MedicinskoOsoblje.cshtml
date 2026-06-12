@@ -1,0 +1,106 @@
+﻿@{
+    ViewData["Title"] = "Medicinsko osoblje";
+    var doktori = ViewBag.Doktori as IEnumerable<HealthZone.Models.Korisnik> ?? Enumerable.Empty<HealthZone.Models.Korisnik>();
+    var sestre = ViewBag.Sestre as IEnumerable<HealthZone.Models.Korisnik> ?? Enumerable.Empty<HealthZone.Models.Korisnik>();
+    var ocjene = ViewBag.Ocjene as Dictionary<string, double> ?? new Dictionary<string, double>();
+    bool jePacijent = User.IsInRole("Pacijent");
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+
+<style>
+    .hz-page { background: linear-gradient(180deg, #f6fbfa 0%, #ffffff 100%); padding: 3rem 0; }
+    .hz-section-title { display: flex; align-items: center; gap: .75rem; font-weight: 700; color: #0f2e2a; margin-bottom: 1.5rem; }
+    .hz-title-badge { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; font-size: 1.25rem; color: #fff; }
+    .hz-title-badge.doctors { background: linear-gradient(135deg, #0d9488, #14b8a6); }
+    .hz-title-badge.nurses  { background: linear-gradient(135deg, #e11d48, #fb7185); }
+    .hz-grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .hz-card { position: relative; background: #fff; border: 1px solid #e6efed; border-radius: 18px; padding: 1.5rem 1.25rem 1.25rem; text-align: center; transition: all .2s ease; overflow: hidden; }
+    .hz-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 70px; background: linear-gradient(135deg, #ccfbf1, #99f6e4); opacity: .6; }
+    .hz-card.nurse::before { background: linear-gradient(135deg, #ffe4e6, #fecdd3); }
+    .hz-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -20px rgba(13, 148, 136, .35); border-color: #ccfbf1; }
+    .hz-card.nurse:hover { box-shadow: 0 18px 40px -20px rgba(225, 29, 72, .3); border-color: #fecdd3; }
+    .hz-avatar { position: relative; width: 84px; height: 84px; margin: 0 auto 1rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.6rem; color: #fff; border: 4px solid #fff; box-shadow: 0 8px 20px -8px rgba(15, 46, 42, .25); background: linear-gradient(135deg, #0d9488, #14b8a6); }
+    .hz-card.nurse .hz-avatar { background: linear-gradient(135deg, #e11d48, #fb7185); }
+    .hz-badge-icon { position: absolute; right: -4px; bottom: -4px; width: 30px; height: 30px; border-radius: 50%; background: #fff; color: #0d9488; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+    .hz-card.nurse .hz-badge-icon { color: #e11d48; }
+    .hz-name { position: relative; font-weight: 600; color: #0f2e2a; margin-bottom: .35rem; }
+    .hz-role { position: relative; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: #5b7470; margin-bottom: .75rem; }
+    .hz-rating { position: relative; display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; color: #475569; background: #f1f5f4; padding: .25rem .6rem; border-radius: 999px; }
+    .hz-rating .bi-star-fill { color: #f59e0b; }
+    .hz-empty { padding: 2rem; text-align: center; color: #64748b; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 14px; }
+</style>
+
+@functions {
+    string Inicijali(string ime, string prezime) {
+        var i = !string.IsNullOrEmpty(ime) ? ime.Substring(0, 1) : "";
+        var p = !string.IsNullOrEmpty(prezime) ? prezime.Substring(0, 1) : "";
+        return (i + p).ToUpper();
+    }
+}
+
+<div class="hz-page">
+    <div class="container">
+
+        <h2 class="hz-section-title">
+            <span class="hz-title-badge doctors"><i class="bi bi-clipboard2-pulse"></i></span>
+            Naši doktori
+        </h2>
+
+        @if (doktori.Any())
+        {
+            <div class="hz-grid">
+                @foreach (var d in doktori)
+                {
+                    var key = $"{d.Ime} {d.Prezime}";
+                    var ocjena = ocjene.ContainsKey(key) ? ocjene[key] : 0;
+                    <div class="hz-card">
+                        <div class="hz-avatar">
+                            @Inicijali(d.Ime, d.Prezime)
+                            <span class="hz-badge-icon"><i class="bi bi-heart-pulse-fill"></i></span>
+                        </div>
+                        <div class="hz-name">Dr. @d.Ime @d.Prezime</div>
+                        <div class="hz-role">Doktor</div>
+                        @if (ocjena > 0)
+                        {
+                            <span class="hz-rating">
+                                <i class="bi bi-star-fill"></i> @ocjena.ToString("0.0") / 5
+                            </span>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="hz-empty">Nema dostupnih doktora.</div>
+        }
+
+        <h2 class="hz-section-title" style="margin-top: 3rem;">
+            <span class="hz-title-badge nurses"><i class="bi bi-heart-pulse"></i></span>
+            Medicinske sestre
+        </h2>
+
+        @if (sestre.Any())
+        {
+            <div class="hz-grid">
+                @foreach (var s in sestre)
+                {
+                    <div class="hz-card nurse">
+                        <div class="hz-avatar">
+                            @Inicijali(s.Ime, s.Prezime)
+                            <span class="hz-badge-icon"><i class="bi bi-bandaid-fill"></i></span>
+                        </div>
+                        <div class="hz-name">@s.Ime @s.Prezime</div>
+                        <div class="hz-role">Medicinska sestra</div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="hz-empty">Nema dostupnih medicinskih sestara.</div>
+        }
+
+    </div>
+</div>

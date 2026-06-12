@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using HealthZone.Models;
 using HealthZone.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HealthZone.Controllers
 {
@@ -39,12 +40,16 @@ namespace HealthZone.Controllers
         }
 
         // GET: MedicinskaUsluga/Create
+        [Authorize(Roles = "Administrator,Doktor")]
+
         public IActionResult Create()
         {
             return View();
         }
 
         // POST: MedicinskaUsluga/Create
+        [Authorize(Roles = "Administrator,Doktor")]
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("UslugaId,Naziv,Vrsta,Opis,Cijena")] MedicinskaUsluga medicinskaUsluga)
@@ -52,13 +57,14 @@ namespace HealthZone.Controllers
             if (ModelState.IsValid)
             {
                 await _medicinskaUslugaService.AddAsync(medicinskaUsluga);
-                await _medicinskaUslugaService.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(medicinskaUsluga);
         }
 
         // GET: MedicinskaUsluga/Edit/5
+        [Authorize(Roles = "Administrator,Doktor")]
+
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -73,6 +79,7 @@ namespace HealthZone.Controllers
             }
             return View(medicinskaUsluga);
         }
+        [Authorize(Roles = "Administrator,Doktor")]
 
         // POST: MedicinskaUsluga/Edit/5
         [HttpPost]
@@ -108,6 +115,8 @@ namespace HealthZone.Controllers
         }
 
         // GET: MedicinskaUsluga/Delete/5
+        [Authorize(Roles = "Administrator,Doktor")]
+
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -123,6 +132,7 @@ namespace HealthZone.Controllers
 
             return View(medicinskaUsluga);
         }
+        [Authorize(Roles = "Administrator,Doktor")]
 
         // POST: MedicinskaUsluga/Delete/5
         [HttpPost, ActionName("Delete")]

@@ -1,65 +1,165 @@
 @model IEnumerable<HealthZone.Models.Recenzija>
-
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<Korisnik> UserManager
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Recenzije";
 }
 
-<h1>Index</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Komentar)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OcjenaLjubaznosti)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OcjenaProfesionalnosti)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.OcjenaUsluge)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Pacijent)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Doktor)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Komentar)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.OcjenaLjubaznosti)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.OcjenaProfesionalnosti)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.OcjenaUsluge)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Pacijent.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Doktor.Id)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.RecenzijaId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.RecenzijaId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.RecenzijaId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<style>
+    .rec-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 18px;
+        margin-top: 20px;
+    }
+
+    .rec-card {
+        background: #fff;
+        border: 1px solid #e8f0ed;
+        border-radius: 14px;
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .rec-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .rec-doktor {
+        font-weight: 700;
+        color: #1a2e25;
+        font-size: 15px;
+    }
+
+    .rec-pacijent {
+        font-size: 12px;
+        color: #7a9a8a;
+    }
+
+    .rec-stars {
+        color: #f5a623;
+        font-size: 16px;
+        letter-spacing: 1px;
+    }
+
+    .rec-ocjene {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+        color: #5a7a6a;
+    }
+
+    .rec-ocjena-row {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .rec-komentar {
+        font-size: 13px;
+        color: #3a5a4a;
+        font-style: italic;
+        border-left: 3px solid #d0ede3;
+        padding-left: 10px;
+        margin-top: 4px;
+    }
+
+    .rec-ukupno {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--hz-accent, #00a86b);
+    }
+
+    .rec-empty {
+        text-align: center;
+        padding: 60px 0;
+        color: #8aaa99;
+    }
+
+    .admin-del {
+        font-size: 12px;
+        color: #e05;
+        margin-top: 4px;
+    }
+</style>
+
+<div class="hz-page">
+    <div class="hz-header">
+        <div class="hz-logo">⭐</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Recenzije doktora</h1>
+            <p class="hz-subtitle">Iskustva pacijenata pomažu vam da odaberete pravog doktora.</p>
+        </div>
+    </div>
+
+    <div class="hz-toolbar">
+        <div></div>
+        @if (User.IsInRole("Pacijent"))
+        {
+            <a asp-action="Create" class="hz-btn hz-btn-primary">+ Dodaj recenziju</a>
+        }
+        @if (User.IsInRole("Doktor"))
+        {
+            <a asp-action="MojeRecenzije" class="hz-btn hz-btn-ghost">Moje ocjene</a>
+        }
+    </div>
+
+    @if (TempData["Uspjeh"] != null)
+    {
+        <div class="hz-alert hz-alert-success">@TempData["Uspjeh"]</div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="rec-grid">
+            @foreach (var r in Model)
+            {
+                double ukupno = Math.Round((r.OcjenaLjubaznosti + r.OcjenaProfesionalnosti + r.OcjenaUsluge) / 3.0, 1);
+                int zvjezdice = (int)Math.Round(ukupno);
+                <div class="rec-card">
+                    <div class="rec-header">
+                        <div>
+                            <div class="rec-doktor">Dr. @r.Doktor?.Ime @r.Doktor?.Prezime</div>
+                            <div class="rec-pacijent">Pacijent: @r.Pacijent?.Ime @r.Pacijent?.Prezime</div>
+                        </div>
+                        <div>
+                            <div class="rec-stars">@string.Concat(Enumerable.Repeat("★", zvjezdice))@string.Concat(Enumerable.Repeat("☆", 5 - zvjezdice))</div>
+                            <div class="rec-ukupno" style="text-align:right">@ukupno / 5</div>
+                        </div>
+                    </div>
+                    <div class="rec-ocjene">
+                        <div class="rec-ocjena-row"><span>Ljubaznost</span><span>@r.OcjenaLjubaznosti/5</span></div>
+                        <div class="rec-ocjena-row"><span>Profesionalnost</span><span>@r.OcjenaProfesionalnosti/5</span></div>
+                        <div class="rec-ocjena-row"><span>Kvalitet usluge</span><span>@r.OcjenaUsluge/5</span></div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(r.Komentar))
+                    {
+                        <div class="rec-komentar">"@r.Komentar"</div>
+                    }
+                    @if (User.IsInRole("Administrator") ||
+                        (User.IsInRole("Pacijent") && r.PacijentID == UserManager.GetUserId(User)))
+                    {
+                        <form asp-action="Delete" asp-route-id="@r.RecenzijaId" method="post" style="margin-top:4px">
+                            <button type="submit" class="hz-btn hz-btn-ghost admin-del" onclick="return confirm('Obrisati recenziju?')">🗑 Obriši</button>
+                        </form>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="rec-empty">
+            <div style="font-size:48px;margin-bottom:12px">⭐</div>
+            <h3>Još nema recenzija</h3>
+            <p>Budite prvi koji će ocijeniti doktora.</p>
+        </div>
+    }
+</div>

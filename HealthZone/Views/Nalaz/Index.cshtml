@@ -1,71 +1,230 @@
 @model IEnumerable<HealthZone.Models.Nalaz>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = User.IsInRole("Pacijent") ? "Moji nalazi" : "Nalazi";
 }
 
-<h1>Index</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Opis)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Dijagnoza)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Terapija)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TerminID)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Termin)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PacijentID)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Pacijent)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.Opis)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Dijagnoza)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Terapija)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.TerminID)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Termin)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.PacijentID)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Pacijent)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.NalazId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.NalazId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.NalazId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="hz-page">
+
+    <div class="hz-header">
+        <div class="hz-logo">📋</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">@ViewData["Title"]</h1>
+            <p class="hz-subtitle">
+                @if (User.IsInRole("Pacijent"))
+                {
+                    <span>Pregled svih vaših medicinskih nalaza, dijagnoza i propisanih terapija.</span>
+                }
+                else
+                {
+                    <span>Medicinski nalazi, dijagnoze i propisane terapije. Sortirani od najnovijeg ka najstarijem.</span>
+                }
+            </p>
+        </div>
+    </div>
+
+    @if (!User.IsInRole("Pacijent"))
+    {
+        <div class="hz-filter-bar" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;align-items:flex-end;">
+            <div class="hz-field" style="flex:1;min-width:160px;">
+                <label class="hz-label" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--hz-muted);display:block;margin-bottom:5px;">Ime pacijenta</label>
+                <input type="text" id="f-ime" placeholder="npr. Ana Kovač..." class="hz-input" style="width:100%;" />
+            </div>
+            <div class="hz-field" style="flex:1;min-width:140px;">
+                <label class="hz-label" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--hz-muted);display:block;margin-bottom:5px;">Broj kartona</label>
+                <input type="text" id="f-karton" placeholder="npr. 00123..." class="hz-input" style="width:100%;" />
+            </div>
+            <div class="hz-field" style="flex:1;min-width:140px;">
+                <label class="hz-label" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--hz-muted);display:block;margin-bottom:5px;">Doktor</label>
+                <input type="text" id="f-doktor" placeholder="npr. Dr. Perić..." class="hz-input" style="width:100%;" />
+            </div>
+            <div class="hz-field" style="flex:1;min-width:130px;">
+                <label class="hz-label" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--hz-muted);display:block;margin-bottom:5px;">Datum (od)</label>
+                <input type="date" id="f-datum-od" class="hz-input" style="width:100%;" />
+            </div>
+            <div class="hz-field" style="flex:1;min-width:130px;">
+                <label class="hz-label" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--hz-muted);display:block;margin-bottom:5px;">Datum (do)</label>
+                <input type="date" id="f-datum-do" class="hz-input" style="width:100%;" />
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                @if (User.IsInRole("Doktor") || User.IsInRole("Administrator"))
+                {
+                    <a asp-action="Create" class="hz-btn hz-btn-primary">+ Novi nalaz</a>
+                }
+                <button type="button" onclick="resetFilteri()" class="hz-btn hz-btn-ghost" id="btn-reset" style="display:none;">✕ Reset</button>
+            </div>
+        </div>
+        <div id="f-count" style="font-size:13px;color:var(--hz-muted);margin-bottom:10px;"></div>
+    }
+    else
+    {
+        <div class="hz-toolbar">
+            <div class="hz-search">
+                <input type="text" id="hz-filter-pacijent" placeholder="Pretraži nalaze..." />
+            </div>
+        </div>
+    }
+
+    <div class="hz-table-wrap">
+        @if (Model != null && Model.Any())
+        {
+            <table class="hz-table">
+                <thead>
+                    <tr>
+                        @if (!User.IsInRole("Pacijent"))
+                        {
+                            <th>Pacijent</th>
+                            <th>Br. kartona</th>
+                            <th>Datum</th>
+                            <th>Doktor</th>
+                        }
+                        <th>Dijagnoza</th>
+                        <th>Terapija</th>
+                        <th style="text-align:right">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody id="hz-tbody">
+                    @foreach (var item in Model)
+                    {
+                        <tr
+                            data-ime="@((item.Pacijent != null ? (item.Pacijent.Ime + " " + item.Pacijent.Prezime) : "").ToLower())"
+                            data-karton="@((item.Pacijent?.BrojKartona ?? "").ToLower())"
+                            data-doktor="@((item.Termin?.Doktor != null ? (item.Termin.Doktor.Ime + " " + item.Termin.Doktor.Prezime) : "").ToLower())"
+                            data-datum="@(item.Termin != null ? item.Termin.Datum.ToString("yyyy-MM-dd") : "")">
+
+                            @if (!User.IsInRole("Pacijent"))
+                            {
+                                <td data-label="Pacijent">
+                                    @(item.Pacijent != null ? (item.Pacijent.Ime + " " + item.Pacijent.Prezime) : "—")
+                                </td>
+                                <td data-label="Br. kartona" style="font-family:monospace;font-size:13px;color:var(--hz-muted)">
+                                    @(item.Pacijent?.BrojKartona ?? "—")
+                                </td>
+                                <td data-label="Datum" style="white-space:nowrap;font-size:13px;">
+                                    @(item.Termin != null ? item.Termin.Datum.ToString("dd.MM.yyyy") : "—")
+                                </td>
+                                <td data-label="Doktor" style="font-size:13px;">
+                                    @(item.Termin?.Doktor != null ? ("Dr. " + item.Termin.Doktor.Ime + " " + item.Termin.Doktor.Prezime) : "—")
+                                </td>
+                            }
+                            <td data-label="Dijagnoza">
+                                @(item.Dijagnoza?.Length > 50 ? item.Dijagnoza.Substring(0, 50) + "..." : item.Dijagnoza)
+                            </td>
+                            <td data-label="Terapija">
+                                @(item.Terapija?.Length > 50 ? item.Terapija.Substring(0, 50) + "..." : item.Terapija)
+                            </td>
+                            <td class="hz-cell-actions" data-label="Akcije">
+                                <a asp-action="Details" asp-route-id="@item.NalazId" title="Detalji">👁</a>
+                                @if (User.IsInRole("MedicinskaSestra") || User.IsInRole("Doktor") || User.IsInRole("Administrator"))
+                                {
+                                    <a asp-action="Print" asp-route-id="@item.NalazId" title="Štampaj" target="_blank">🖨️</a>
+                                }
+                                @if (User.IsInRole("Doktor") || User.IsInRole("Administrator"))
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.NalazId" title="Uredi">✎</a>
+                                }
+                                @if (User.IsInRole("Administrator"))
+                                {
+                                    <a asp-action="Delete" asp-route-id="@item.NalazId" class="danger" title="Obriši">🗑</a>
+                                }
+                                @if (User.IsInRole("Doktor") || User.IsInRole("Administrator"))
+                                {
+                                    <a asp-controller="Nalaz" asp-action="MedicinskiKarton"
+                                       asp-route-id="@item.PacijentID" title="Medicinska historija">📋</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="hz-empty">
+                <span class="icon">📋</span>
+                <h3 style="margin:0 0 6px;color:var(--hz-accent)">Još nema nalaza</h3>
+                <p style="margin:0 0 18px">
+                    @if (User.IsInRole("Pacijent"))
+                    {
+                        <span>Trenutno nemate nijedan nalaz. Kada doktor kreira nalaz, on će se pojaviti ovdje.</span>
+                    }
+                    else
+                    {
+                        <span>Kliknite na dugme iznad da kreirate prvi nalaz.</span>
+                    }
+                </p>
+                @if (User.IsInRole("Doktor") || User.IsInRole("Administrator"))
+                {
+                    <a asp-action="Create" class="hz-btn hz-btn-primary">+ Kreiraj nalaz</a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    // Pacijent — jednostavna pretraga
+    document.getElementById('hz-filter-pacijent')?.addEventListener('input', function (e) {
+        var q = e.target.value.toLowerCase();
+        document.querySelectorAll('#hz-tbody tr').forEach(function (tr) {
+            tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+
+    // Ostali — napredni filteri
+    var totalRows = document.querySelectorAll('#hz-tbody tr').length;
+
+    function applyFilteri() {
+        var ime    = (document.getElementById('f-ime')?.value    || '').toLowerCase().trim();
+        var karton = (document.getElementById('f-karton')?.value || '').toLowerCase().trim();
+        var doktor = (document.getElementById('f-doktor')?.value || '').toLowerCase().trim();
+        var od     = document.getElementById('f-datum-od')?.value || '';
+        var doo    = document.getElementById('f-datum-do')?.value || '';
+
+        var aktivni = ime || karton || doktor || od || doo;
+        var btnReset = document.getElementById('btn-reset');
+        if (btnReset) btnReset.style.display = aktivni ? 'inline-flex' : 'none';
+
+        var vidljivi = 0;
+        document.querySelectorAll('#hz-tbody tr').forEach(function (tr) {
+            var dIme    = tr.dataset.ime    || '';
+            var dKarton = tr.dataset.karton || '';
+            var dDoktor = tr.dataset.doktor || '';
+            var dDatum  = tr.dataset.datum  || '';
+
+            var ok = true;
+            if (ime    && !dIme.includes(ime))       ok = false;
+            if (karton && !dKarton.includes(karton)) ok = false;
+            if (doktor && !dDoktor.includes(doktor)) ok = false;
+            if (od     && dDatum && dDatum < od)     ok = false;
+            if (doo    && dDatum && dDatum > doo)    ok = false;
+
+            tr.style.display = ok ? '' : 'none';
+            if (ok) vidljivi++;
+        });
+
+        var counter = document.getElementById('f-count');
+        if (counter) {
+            if (aktivni) {
+                counter.textContent = 'Prikazano ' + vidljivi + ' od ' + totalRows + ' nalaza';
+            } else {
+                counter.textContent = '';
+            }
+        }
+    }
+
+    ['f-ime','f-karton','f-doktor','f-datum-od','f-datum-do'].forEach(function(id) {
+        document.getElementById(id)?.addEventListener('input', applyFilteri);
+    });
+
+    function resetFilteri() {
+        ['f-ime','f-karton','f-doktor','f-datum-od','f-datum-do'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        applyFilteri();
+    }
+</script>

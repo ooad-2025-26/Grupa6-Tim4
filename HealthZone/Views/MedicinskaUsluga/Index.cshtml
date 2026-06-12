@@ -1,53 +1,351 @@
 @model IEnumerable<HealthZone.Models.MedicinskaUsluga>
-
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Medicinske usluge";
+    bool mozeUredivati = User.IsInRole("Administrator") || User.IsInRole("Doktor");
+
+    var grupisano = Model?
+        .GroupBy(u => u.Vrsta)
+        .OrderBy(g => g.Key.ToString())
+        .ToList() ?? new List<IGrouping<HealthZone.Models.Specijalizacija, HealthZone.Models.MedicinskaUsluga>>();
 }
 
-<h1>Index</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Naziv)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Vrsta)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Opis)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Cijena)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(model => item.Naziv)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Vrsta)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Opis)
-            </td>
-            <td>
-                @Html.DisplayFor(model => item.Cijena)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.UslugaId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.UslugaId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.UslugaId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<style>
+    :root {
+        --hz-teal: #0BA5A4;
+        --hz-teal-dark: #0E7C7B;
+        --hz-ink: #0a3d3d;
+        --hz-line: #d8ece9;
+        --hz-soft: #f3faf9;
+    }
+
+    .uz-wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+        font-family: 'Inter', system-ui, sans-serif;
+        color: var(--hz-ink);
+    }
+
+    /* HEADER CARD sa okvirom */
+    .uz-header {
+        border: 1px solid var(--hz-line);
+        border-left: 4px solid var(--hz-teal);
+        border-radius: 14px;
+        background: linear-gradient(180deg, #fff 0%, var(--hz-soft) 100%);
+        padding: 28px 32px;
+        margin-bottom: 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        box-shadow: 0 1px 0 rgba(11,165,164,.06);
+    }
+
+        .uz-header h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+            letter-spacing: -.02em;
+        }
+
+        .uz-header p {
+            margin: 0;
+            color: #547372;
+            font-size: 14px;
+        }
+
+    .uz-btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--hz-teal);
+        color: #fff;
+        border: 1px solid var(--hz-teal-dark);
+        padding: 10px 18px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: .15s;
+    }
+
+        .uz-btn-primary:hover {
+            background: var(--hz-teal-dark);
+            transform: translateY(-1px);
+        }
+
+    /* GRUPNA KARTICA — naglašen okvir */
+    .uz-group {
+        border: 1px solid var(--hz-line);
+        border-radius: 14px;
+        background: #fff;
+        margin-bottom: 24px;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(10,61,61,.04);
+    }
+
+    .uz-group-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 22px;
+        background: var(--hz-soft);
+        border-bottom: 1px solid var(--hz-line);
+    }
+
+    .uz-group-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--hz-ink);
+    }
+
+    .uz-group-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--hz-teal);
+        box-shadow: 0 0 0 4px rgba(11,165,164,.15);
+    }
+
+    .uz-group-count {
+        background: #fff;
+        border: 1px solid var(--hz-line);
+        color: var(--hz-teal-dark);
+        font-weight: 600;
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 999px;
+    }
+
+    /* TABELA */
+    .uz-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .uz-table th {
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #6a8584;
+            font-weight: 600;
+            padding: 12px 22px;
+            background: #fafdfc;
+            border-bottom: 1px solid var(--hz-line);
+        }
+
+        .uz-table td {
+            padding: 16px 22px;
+            font-size: 14px;
+            border-bottom: 1px solid #eef6f5;
+            vertical-align: middle;
+        }
+
+        .uz-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .uz-table tbody tr:hover {
+            background: #f7fcfb;
+        }
+
+    .uz-name {
+        font-weight: 600;
+        color: var(--hz-ink);
+    }
+
+    .uz-price {
+        display: inline-block;
+        font-weight: 700;
+        color: var(--hz-teal-dark);
+        background: rgba(11,165,164,.08);
+        border: 1px solid rgba(11,165,164,.2);
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+    /* AKCIJE — okviri umjesto plain linkova */
+    .uz-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+    }
+
+    .uz-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        border: 1px solid transparent;
+        transition: .15s;
+    }
+
+    .uz-action-view {
+        color: var(--hz-teal-dark);
+        border-color: var(--hz-line);
+        background: #fff;
+    }
+
+        .uz-action-view:hover {
+            background: var(--hz-soft);
+            border-color: var(--hz-teal);
+        }
+
+    .uz-action-edit {
+        color: #8a6d00;
+        border-color: #f3e3a1;
+        background: #fffbeb;
+    }
+
+        .uz-action-edit:hover {
+            background: #fef3c7;
+        }
+
+    .uz-action-del {
+        color: #b42318;
+        border-color: #fecdca;
+        background: #fef3f2;
+    }
+
+        .uz-action-del:hover {
+            background: #fee4e2;
+        }
+
+    /* EMPTY STATE */
+    .uz-empty {
+        border: 2px dashed var(--hz-line);
+        border-radius: 14px;
+        padding: 60px 24px;
+        text-align: center;
+        background: #fff;
+    }
+
+        .uz-empty h3 {
+            margin: 12px 0 6px;
+            color: var(--hz-ink);
+        }
+
+        .uz-empty p {
+            color: #6a8584;
+            margin: 0 0 18px;
+        }
+
+    @@media (max-width: 720px) {
+        .uz-table thead {
+            display: none;
+        }
+
+        .uz-table, .uz-table tbody, .uz-table tr, .uz-table td {
+            display: block;
+            width: 100%;
+        }
+
+            .uz-table tr {
+                border-bottom: 1px solid var(--hz-line);
+                padding: 12px 0;
+            }
+
+            .uz-table td {
+                padding: 6px 22px;
+                border: 0;
+            }
+
+                .uz-table td::before {
+                    content: attr(data-label);
+                    display: block;
+                    font-size: 11px;
+                    text-transform: uppercase;
+                    color: #6a8584;
+                    margin-bottom: 2px;
+                }
+
+        .uz-actions {
+            justify-content: flex-start;
+            padding-top: 8px;
+        }
+    }
+</style>
+
+<div class="uz-wrap">
+
+    <div class="uz-header">
+        <div>
+            <h1>Medicinske usluge</h1>
+            <p>Pregled svih dostupnih usluga grupisanih po specijalizaciji.</p>
+        </div>
+        @if (mozeUredivati)
+        {
+            <a asp-action="Create" class="uz-btn-primary">+ Nova usluga</a>
+        }
+    </div>
+
+    @if (!grupisano.Any())
+    {
+        <div class="uz-empty">
+            <h3>Još nema unesenih usluga</h3>
+            <p>Kada se dodaju, pojavit će se ovdje grupisane po specijalizaciji.</p>
+            @if (mozeUredivati)
+            {
+                <a asp-action="Create" class="uz-btn-primary">Dodaj prvu uslugu</a>
+            }
+        </div>
+    }
+    else
+    {
+        foreach (var grupa in grupisano)
+        {
+            <div class="uz-group">
+                <div class="uz-group-head">
+                    <div class="uz-group-title">
+                        <span class="uz-group-dot"></span>
+                        @grupa.Key
+                    </div>
+                    <span class="uz-group-count">@grupa.Count() @(grupa.Count() == 1 ? "usluga" : "usluga")</span>
+                </div>
+
+                <table class="uz-table">
+                    <thead>
+                        <tr>
+                            <th>Naziv</th>
+                            <th>Opis</th>
+                            <th>Cijena</th>
+                            <th style="text-align:right;">Akcije</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in grupa.OrderBy(x => x.Naziv))
+                        {
+                            <tr>
+                                <td data-label="Naziv" class="uz-name">@u.Naziv</td>
+                                <td data-label="Opis" style="color:#547372;">@(string.IsNullOrWhiteSpace(u.Opis) ? "—" : u.Opis)</td>
+                                <td data-label="Cijena"><span class="uz-price">@u.Cijena.ToString("0.00") KM</span></td>
+                                <td data-label="Akcije">
+                                    <div class="uz-actions">
+                                        <a class="uz-action uz-action-view" asp-action="Details" asp-route-id="@u.UslugaId">Detalji</a>
+                                        @if (mozeUredivati)
+                                        {
+                                            <a class="uz-action uz-action-edit" asp-action="Edit" asp-route-id="@u.UslugaId">Uredi</a>
+                                            <a class="uz-action uz-action-del" asp-action="Delete" asp-route-id="@u.UslugaId">Obriši</a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</div>

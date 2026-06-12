@@ -17,7 +17,7 @@ namespace HealthZone.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -31,7 +31,6 @@ namespace HealthZone.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("BrojKartona")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -76,13 +75,13 @@ namespace HealthZone.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Prioritet")
+                    b.Property<int?>("Prioritet")
                         .HasColumnType("int");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Specijalizacija")
+                    b.Property<int?>("Specijalizacija")
                         .HasColumnType("int");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -102,7 +101,7 @@ namespace HealthZone.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
-                    b.ToTable("Korisnici", (string)null);
+                    b.ToTable("AspNetUsers", (string)null);
                 });
 
             modelBuilder.Entity("HealthZone.Models.KorisnikNaListi", b =>

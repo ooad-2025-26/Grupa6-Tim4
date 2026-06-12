@@ -10,6 +10,7 @@ namespace HealthZone.Services
         void Update(ListaCekanja listaCekanja);
         void Delete(ListaCekanja listaCekanja);
         Task<int> SaveChangesAsync();
+        Task<ListaCekanja?> GetListaZaDoktoraAsync(string doktorId);
 
         Task<IEnumerable<Korisnik>> GetDoktoriAsync();
     }

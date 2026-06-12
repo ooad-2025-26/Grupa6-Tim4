@@ -1,0 +1,383 @@
+﻿@model IEnumerable<HealthZone.Models.Nalaz>
+
+@{
+    ViewData["Title"] = "Printanje nalaza";
+    var nalazi = Model.ToList();
+    int? selectedId = ViewBag.SelectedId as int?;
+    var selected = selectedId.HasValue
+        ? nalazi.FirstOrDefault(n => n.NalazId == selectedId.Value)
+        : nalazi.FirstOrDefault();
+
+    // Bosnian date formatter
+    Func<DateTime?, string> fmtDatum = dt =>
+    {
+        if (dt == null) return "—";
+        string[] mj = { "januar", "februar", "mart", "april", "maj", "juni",
+                         "juli", "august", "septembar", "oktobar", "novembar", "decembar" };
+        return $"{dt.Value.Day}. {mj[dt.Value.Month - 1]} {dt.Value.Year}.";
+    };
+}
+
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+    .pn-hero {
+        background: linear-gradient(135deg, #e8f5f4 0%, #d6edea 100%);
+        padding: 44px 48px;
+        margin-bottom: 32px;
+    }
+
+        .pn-hero h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0d1b2a;
+            margin: 0 0 8px;
+        }
+
+        .pn-hero p {
+            color: #4a7a75;
+            margin: 0;
+            font-size: 1rem;
+        }
+
+    .pn-wrap {
+        display: flex;
+        gap: 24px;
+        padding: 0 48px 48px;
+        align-items: flex-start;
+    }
+
+    /* ── Lijeva lista ──────────────────────── */
+    .pn-sidebar {
+        width: 290px;
+        flex-shrink: 0;
+    }
+
+    .pn-sidebar-title {
+        font-weight: 700;
+        font-size: 0.78rem;
+        letter-spacing: .1em;
+        color: #4a7a75;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+    }
+
+    .pn-item {
+        display: block;
+        text-decoration: none;
+        margin-bottom: 10px;
+        padding: 14px 16px;
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        transition: border-color .15s, background .15s;
+    }
+
+        .pn-item:hover {
+            border-color: #0BA5A4;
+        }
+
+        .pn-item.active {
+            border-color: #0BA5A4;
+            background: #f0faf9;
+        }
+
+    .pn-item-name {
+        font-weight: 600;
+        color: #0d1b2a;
+        font-size: .9rem;
+    }
+
+    .pn-item-sub {
+        color: #6b7280;
+        font-size: .82rem;
+        margin-top: 2px;
+    }
+
+    /* ── Desna ploča ───────────────────────── */
+    .pn-panel {
+        flex: 1;
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .pn-panel-head {
+        padding: 22px 28px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+        .pn-panel-head h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0d1b2a;
+            margin: 0;
+        }
+
+    .pn-row {
+        padding: 15px 28px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .pn-row:last-of-type {
+            border-bottom: none;
+        }
+
+    .pn-lbl {
+        color: #6b7280;
+        font-size: .9rem;
+    }
+
+    .pn-val {
+        font-weight: 600;
+        color: #0d1b2a;
+        font-size: .9rem;
+        text-align: right;
+    }
+
+    .pn-badge {
+        background: #e8f5f4;
+        color: #0BA5A4;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: .82rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .pn-actions {
+        padding: 20px 28px;
+        display: flex;
+        gap: 12px;
+        border-top: 1px solid #f0f0f0;
+        flex-wrap: wrap;
+    }
+
+    .pn-btn-primary {
+        background: #0BA5A4;
+        color: white;
+        border: none;
+        padding: 11px 24px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: .9rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        transition: background .15s;
+    }
+
+        .pn-btn-primary:hover {
+            background: #089b9a;
+        }
+
+    .pn-btn-secondary {
+        background: white;
+        color: #0d1b2a;
+        border: 2px solid #e5e7eb;
+        padding: 11px 24px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: .9rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        transition: border-color .15s;
+    }
+
+        .pn-btn-secondary:hover {
+            border-color: #0BA5A4;
+        }
+
+    .pn-alert {
+        margin: 0 28px 16px;
+        padding: 11px 16px;
+        border-radius: 8px;
+        font-size: .875rem;
+        font-weight: 500;
+    }
+
+    .pn-alert-ok {
+        background: #e8f5f4;
+        color: #0c7b6e;
+    }
+
+    .pn-alert-err {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .pn-empty {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        text-align: center;
+        padding: 48px;
+    }
+
+    @@media (max-width: 768px) {
+        .pn-wrap {
+            flex-direction: column;
+            padding: 0 20px 32px;
+        }
+
+        .pn-sidebar {
+            width: 100%;
+        }
+
+        .pn-hero {
+            padding: 28px 20px;
+        }
+    }
+</style>
+
+<!-- ═══ HERO ═══════════════════════════════════════════════════════════════ -->
+<div class="pn-hero">
+    <h1>Printanje nalaza</h1>
+    <p>Pregled, printanje i slanje nalaza na email.</p>
+</div>
+
+<!-- ═══ SADRŽAJ ════════════════════════════════════════════════════════════ -->
+<div class="pn-wrap">
+
+    <!-- ── LIJEVA LISTA ─────────────────────────────────────────────────── -->
+    <div class="pn-sidebar">
+        <div class="pn-sidebar-title">NALAZI</div>
+
+        @if (!nalazi.Any())
+        {
+            <p style="color:#6b7280;font-size:.875rem;">Nema pronađenih nalaza.</p>
+        }
+
+        @foreach (var n in nalazi)
+        {
+            bool isActive = selected != null && n.NalazId == selected.NalazId;
+            <a href="@Url.Action("PrintanjeNalaza", "Nalaz", new { selectedId = n.NalazId })"
+               class="pn-item @(isActive ? "active" : "")">
+                <div class="pn-item-name">
+                    @(n.Pacijent != null
+                                    ? $"{n.Pacijent.Ime} {n.Pacijent.Prezime}"
+                                    : "Nepoznat pacijent")
+            </div>
+            <div class="pn-item-sub">@n.Dijagnoza</div>
+            <div class="pn-item-sub">@fmtDatum(n.Termin?.Datum)</div>
+        </a>
+                }
+    </div>
+
+    <!-- ── DESNA PLOČA ──────────────────────────────────────────────────── -->
+    <div class="pn-panel">
+
+        @if (selected != null)
+        {
+            <!-- Zaglavlje -->
+            <div class="pn-panel-head">
+                <span style="color:#0BA5A4;font-size:1.5rem;">📄</span>
+                <h2>Medicinski nalaz</h2>
+            </div>
+
+            <!-- Redovi s podacima -->
+            <div class="pn-row">
+                <span class="pn-lbl">Pacijent</span>
+                <span class="pn-val">
+                    @(selected.Pacijent != null
+                                    ? $"{selected.Pacijent.Ime} {selected.Pacijent.Prezime}"
+                                    : "—")
+                                      </span>
+                                  </div>
+
+            <div class="pn-row">
+                <span class="pn-lbl">Dijagnoza</span>
+                <span class="pn-val">@(selected.Dijagnoza ?? "—")</span>
+            </div>
+
+            <div class="pn-row">
+                <span class="pn-lbl">Doktor</span>
+                <span class="pn-val">
+                    @*
+                        Prilagoditi prema strukturi Termin modela.
+                        Ako Termin ima navigacijsko svojstvo Doktor (Korisnik), koristiti:
+                        @(selected.Termin?.Doktor != null
+                            ? $"dr. {selected.Termin.Doktor.Ime} {selected.Termin.Doktor.Prezime}"
+                            : "—")
+                    *@
+                    @(selected.Termin?.Doktor != null
+                                    ? $"dr. {selected.Termin.Doktor.Ime} {selected.Termin.Doktor.Prezime}"
+                                    : "—")
+            </span>
+        </div>
+
+            <div class="pn-row">
+                <span class="pn-lbl">Datum</span>
+                <span class="pn-val">@fmtDatum(selected.Termin?.Datum)</span>
+            </div>
+
+            <div class="pn-row">
+                <span class="pn-lbl">Terapija</span>
+                <span class="pn-val">
+                    @(string.IsNullOrEmpty(selected.Terapija) ? "—" : selected.Terapija)
+                </span>
+            </div>
+
+            <div class="pn-row">
+                <span class="pn-lbl">Status printera:</span>
+                <span class="pn-badge">&#10003; Dostupan</span>
+            </div>
+
+            <!-- Poruke -->
+        @if (TempData["SuccessMsg"] != null)
+            {
+                <div class="pn-alert pn-alert-ok">&#10003; @TempData["SuccessMsg"]</div>
+            }
+            @if (TempData["ErrorMsg"] != null)
+            {
+                <div class="pn-alert pn-alert-err">&#9888; @TempData["ErrorMsg"]</div>
+            }
+
+            <!-- Dugmad -->
+            <div class="pn-actions">
+                <!-- Printanje: otvara print-HTML u novom tabu -->
+                <a href="@Url.Action("Print", "Nalaz", new { id = selected.NalazId })"
+                   target="_blank" class="pn-btn-primary">
+                    &#128424; Printaj nalaz
+                </a>
+
+                <!-- Slanje na email -->
+                <form asp-action="PosaljiNaEmail" asp-controller="Nalaz"
+                      asp-route-id="@selected.NalazId" method="post" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="pn-btn-secondary">
+                        &#9993; Pošalji na email
+                    </button>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div class="pn-empty">
+                <div>
+                    <div style="font-size:2.5rem;margin-bottom:12px;">📋</div>
+                    <p style="margin:0;">Odaberite nalaz s lijeve strane.</p>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>

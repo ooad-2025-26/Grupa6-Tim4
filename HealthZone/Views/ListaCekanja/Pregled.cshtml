@@ -1,0 +1,338 @@
+@model IEnumerable<HealthZone.Models.KorisnikNaListi>
+
+@{
+    ViewData["Title"] = "Lista čekanja — pregled";
+
+    var listaId   = ViewData["ListaId"] as int? ?? 0;
+    var doktorIme = ViewData["DoktorIme"] as string ?? "—";
+
+    var sortirani = Model?
+        .OrderByDescending(k => (int)(k.Korisnik?.Prioritet ?? HealthZone.Models.Prioritet.Nizak))
+        .ThenBy(k => k.Datum)
+        .ToList() ?? new List<HealthZone.Models.KorisnikNaListi>();
+
+    int brVisok   = sortirani.Count(k => k.Korisnik?.Prioritet?.ToString() == "Visok");
+    int brSrednji = sortirani.Count(k => k.Korisnik?.Prioritet?.ToString() == "Srednji");
+    int brNizak   = sortirani.Count(k => k.Korisnik?.Prioritet?.ToString() == "Nizak");
+}
+
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+    /* ── PAGE ── */
+    .wl-page {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 32px 20px 60px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ── BACK ── */
+    .wl-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #555;
+        text-decoration: none;
+        margin-bottom: 24px;
+        transition: color .15s;
+    }
+    .wl-back:hover { color: #0BA5A4; }
+
+    /* ── HEADER CARD ── */
+    .wl-header-card {
+        background: linear-gradient(135deg, #e8f8f7 0%, #d0f0ef 100%);
+        border-radius: 18px;
+        padding: 28px 32px 24px;
+        margin-bottom: 24px;
+    }
+    .wl-header-card h1 {
+        margin: 0 0 4px;
+        font-size: 26px;
+        font-weight: 800;
+        color: #0a2a2a;
+        letter-spacing: -.5px;
+    }
+    .wl-header-meta {
+        font-size: 13px;
+        color: #4a7c7b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .wl-dot { color: #0BA5A4; font-size: 10px; }
+
+    /* ── PRIORITY LEGEND ── */
+    .wl-legend {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+    }
+    .wl-leg-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 99px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all .15s;
+        user-select: none;
+    }
+    .wl-leg-pill.active { border-color: currentColor; }
+    .wl-leg-pill svg { width: 14px; height: 14px; }
+
+    .wl-leg-visok   { background: #fdecea; color: #c0392b; }
+    .wl-leg-srednji { background: #fef3e0; color: #d4780a; }
+    .wl-leg-nizak   { background: #e4f5e9; color: #1e7e34; }
+
+    /* ── LIST ── */
+    .wl-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* ── PATIENT CARD ── */
+    .wl-card {
+        background: #fff;
+        border: 1.5px solid #eaeef3;
+        border-radius: 16px;
+        padding: 18px 22px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        transition: box-shadow .15s, transform .15s;
+    }
+    .wl-card:hover {
+        box-shadow: 0 4px 20px rgba(11,165,164,.1);
+        transform: translateY(-1px);
+    }
+
+    /* rank bubble */
+    .wl-rank {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #e6f1fb;
+        color: #185fa5;
+        font-weight: 700;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .wl-rank.r1 { background: #ffd700; color: #7a5900; }
+    .wl-rank.r2 { background: #e0e0e0; color: #555; }
+    .wl-rank.r3 { background: #f0dcc4; color: #7a4a1e; }
+
+    /* info */
+    .wl-info { flex: 1; min-width: 0; }
+    .wl-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0a2a2a;
+        margin: 0 0 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .wl-meta {
+        font-size: 12.5px;
+        color: #888;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .wl-meta-dot { color: #ccc; }
+
+    /* priority badge */
+    .wl-pri {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border-radius: 99px;
+        font-size: 12.5px;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+    .wl-pri svg { width: 13px; height: 13px; }
+    .pri-visok   { background: #fdecea; color: #c0392b; }
+    .pri-srednji { background: #fef3e0; color: #d4780a; }
+    .pri-nizak   { background: #e4f5e9; color: #1e7e34; }
+
+    /* actions */
+    .wl-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+    .wl-btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        text-decoration: none;
+        transition: background .15s, color .15s;
+    }
+    .wl-btn-icon:hover { background: #f0f3f7; color: #333; }
+    .wl-btn-icon.del:hover { background: #fdecea; color: #c0392b; }
+
+    /* empty */
+    .wl-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: #aaa;
+    }
+    .wl-empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .wl-empty h3 { color: #0BA5A4; margin: 0 0 8px; }
+
+    /* add btn */
+    .hz-btn { display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:99px;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s;border:none; }
+    .hz-btn-primary { background:#0BA5A4;color:#fff; }
+    .hz-btn-primary:hover { background:#099493; }
+</style>
+
+<div class="wl-page">
+
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+
+    @* HEADER *@
+    <div class="wl-header-card">
+        <h1>Lista čekanja</h1>
+        <div class="wl-header-meta">
+            <span>@sortirani.Count pacijenata na listi</span>
+            <span class="wl-dot">●</span>
+            <span>Dr. @doktorIme</span>
+            <span class="wl-dot">●</span>
+            <span>Automatski ažurirano</span>
+        </div>
+    </div>
+
+    @* PRIORITY LEGEND *@
+    <div class="wl-legend">
+        <span class="wl-leg-pill wl-leg-visok" onclick="filterPri('visok', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Hitno <span style="opacity:.6;font-weight:400">(@brVisok)</span>
+        </span>
+        <span class="wl-leg-pill wl-leg-srednji" onclick="filterPri('srednji', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Srednje <span style="opacity:.6;font-weight:400">(@brSrednji)</span>
+        </span>
+        <span class="wl-leg-pill wl-leg-nizak" onclick="filterPri('nizak', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Normalno <span style="opacity:.6;font-weight:400">(@brNizak)</span>
+        </span>
+    </div>
+
+    @* LIST *@
+    <div class="wl-list" id="wl-list">
+        @if (!sortirani.Any())
+        {
+            <div class="wl-empty">
+                <div class="wl-empty-icon">🕐</div>
+                <h3>Lista čekanja je prazna</h3>
+                <p>Dodajte prvog pacijenta klikom na dugme ispod.</p>
+                <a asp-controller="KorisnikNaListi" asp-action="Create" class="hz-btn hz-btn-primary" style="margin-top:8px">+ Dodaj pacijenta</a>
+            </div>
+        }
+        else
+        {
+            for (int i = 0; i < sortirani.Count; i++)
+            {
+                var s       = sortirani[i];
+                var p       = s.Korisnik;
+                var rank    = i + 1;
+                var rankCls = rank == 1 ? "r1" : rank == 2 ? "r2" : rank == 3 ? "r3" : "";
+                var priStr  = p?.Prioritet?.ToString() ?? "";
+                var priKey  = priStr.ToLower() == "visok" ? "visok" : priStr.ToLower() == "srednji" ? "srednji" : "nizak";
+                var priCls  = priKey == "visok" ? "pri-visok" : priKey == "srednji" ? "pri-srednji" : "pri-nizak";
+                var priIcon = priKey == "visok"
+                    ? @"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/><line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
+                    : @"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/></svg>";
+                var priLabel = priStr == "Visok" ? "Hitno" : priStr == "Srednji" ? "Srednje" : "Normalno";
+
+                <div class="wl-card" data-pri="@priKey">
+                    <div class="wl-rank @rankCls">@rank</div>
+
+                    <div class="wl-info">
+                        <div class="wl-name">@p?.Ime @p?.Prezime</div>
+                        <div class="wl-meta">
+                            <span>Prijavljen: @s.Datum.ToString("HH:mm")</span>
+                            @if (!string.IsNullOrEmpty(p?.BrojKartona))
+                            {
+                                <span class="wl-meta-dot">●</span>
+                                <span>Karton @p.BrojKartona</span>
+                            }
+                        </div>
+                    </div>
+
+                    <span class="wl-pri @priCls">
+                        @Html.Raw(priIcon) @priLabel
+                    </span>
+
+                    <div class="wl-actions">
+                        <a asp-controller="KorisnikNaListi" asp-action="Details"
+                           asp-route-id="@s.KorisnikNaListiID"
+                           class="wl-btn-icon" title="Detalji">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </a>
+                        <a asp-controller="KorisnikNaListi" asp-action="Delete"
+                           asp-route-id="@s.KorisnikNaListiID"
+                           class="wl-btn-icon del" title="Ukloni s liste">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    @if (sortirani.Any())
+    {
+        <div style="margin-top:24px;display:flex;justify-content:flex-end">
+            <a asp-controller="KorisnikNaListi" asp-action="Create" class="hz-btn hz-btn-primary">+ Dodaj pacijenta</a>
+        </div>
+    }
+
+</div>
+
+<script>
+    var activeFilter = null;
+
+    function filterPri(key, el) {
+        var pills = document.querySelectorAll('.wl-leg-pill');
+        var cards = document.querySelectorAll('.wl-card');
+
+        if (activeFilter === key) {
+            // toggle off
+            activeFilter = null;
+            pills.forEach(function(p) { p.classList.remove('active'); });
+            cards.forEach(function(c) { c.style.display = ''; });
+        } else {
+            activeFilter = key;
+            pills.forEach(function(p) { p.classList.remove('active'); });
+            el.classList.add('active');
+            cards.forEach(function(c) {
+                c.style.display = c.dataset.pri === key ? '' : 'none';
+            });
+        }
+    }
+</script>

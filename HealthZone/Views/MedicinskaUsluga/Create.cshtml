@@ -1,48 +1,61 @@
 @model HealthZone.Models.MedicinskaUsluga
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Novi uslugu";
 }
 
-<h1>Create</h1>
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-<h4>MedicinskaUsluga</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="hz-page hz-page-narrow">
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
 
-            <div class="form-group">
-                <label asp-for="Naziv" class="control-label"></label>
-                <input asp-for="Naziv" class="form-control" />
-                <span asp-validation-for="Naziv" class="text-danger"></span>
+    <div class="hz-header">
+        <div class="hz-logo">🩺</div>
+        <div class="hz-header-main">
+            <h1 class="hz-title">Novi uslugu</h1>
+            <p class="hz-subtitle">Unesite podatke za novu stavku u HealthZone sistemu.</p>
+        </div>
+    </div>
+
+    <div class="hz-card">
+        <form asp-action="Create" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            <div class="hz-section-title">Podaci</div>
+
+            <div class="hz-grid">
+        <div class="hz-field">
+            <label asp-for="Naziv" class="hz-label">Naziv usluge<span class="req">*</span></label>
+            <input type="text" asp-for="Naziv" placeholder="npr. Specijalistički pregled" class="hz-input" />
+            <span asp-validation-for="Naziv" class="hz-error"></span>
+        </div>
+        <div class="hz-field">
+            <label asp-for="Vrsta" class="hz-label">Vrsta / Specijalizacija<span class="req">*</span></label>
+            <select asp-for="Vrsta" class="hz-select" asp-items="Html.GetEnumSelectList<Specijalizacija>()"><option value="">— Odaberite —</option></select>
+            <span asp-validation-for="Vrsta" class="hz-error"></span>
+        </div>
+        <div class="hz-field">
+            <label asp-for="Cijena" class="hz-label">Cijena (KM)<span class="req">*</span></label>
+            <input type="number" step="0.01" asp-for="Cijena" placeholder="0.00" class="hz-input" />
+            <span asp-validation-for="Cijena" class="hz-error"></span>
+        </div>
+        <div class="hz-field hz-full">
+            <label asp-for="Opis" class="hz-label">Opis</label>
+            <textarea asp-for="Opis" placeholder="Kratak opis usluge..." class="hz-textarea"></textarea>
+            <span asp-validation-for="Opis" class="hz-error"></span>
+        </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Vrsta" class="control-label"></label>
-                <input asp-for="Vrsta" class="form-control" />
-                <span asp-validation-for="Vrsta" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Opis" class="control-label"></label>
-                <input asp-for="Opis" class="form-control" />
-                <span asp-validation-for="Opis" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Cijena" class="control-label"></label>
-                <input asp-for="Cijena" class="form-control" />
-                <span asp-validation-for="Cijena" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div class="hz-actions">
+                <a asp-action="Index" class="hz-btn hz-btn-ghost">Odustani</a>
+                <button type="submit" class="hz-btn hz-btn-primary">Sačuvaj</button>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

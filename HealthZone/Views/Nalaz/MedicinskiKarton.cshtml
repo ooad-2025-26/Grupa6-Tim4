@@ -1,0 +1,341 @@
+@model IEnumerable<HealthZone.Models.Nalaz>
+
+@{
+    ViewData["Title"] = "Medicinska historija";
+    var pacijent = ViewData["Pacijent"] as HealthZone.Models.Korisnik;
+    var nalazi   = Model?.OrderByDescending(n => n.Termin?.Datum).ToList()
+                   ?? new List<HealthZone.Models.Nalaz>();
+}
+
+<link rel="stylesheet" href="~/css/healthzone.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+    .mk-page {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 32px 20px 60px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ── BACK ── */
+    .mk-back {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 13px; color: #555; text-decoration: none;
+        margin-bottom: 24px; transition: color .15s;
+    }
+    .mk-back:hover { color: #0BA5A4; }
+
+    /* ── PATIENT HEADER ── */
+    .mk-header {
+        background: linear-gradient(135deg, #e8f8f7 0%, #d0f0ef 100%);
+        border-radius: 18px;
+        padding: 26px 32px;
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .mk-avatar {
+        width: 60px; height: 60px; border-radius: 50%;
+        background: #0BA5A4; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; font-weight: 800; flex-shrink: 0;
+    }
+    .mk-header-info h1 {
+        margin: 0 0 4px; font-size: 22px; font-weight: 800;
+        color: #0a2a2a; letter-spacing: -.4px;
+    }
+    .mk-header-meta {
+        display: flex; flex-wrap: wrap; gap: 16px;
+        font-size: 13px; color: #4a7c7b;
+    }
+    .mk-header-meta span { display: flex; align-items: center; gap: 5px; }
+    .mk-stat-pills {
+        display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;
+    }
+    .mk-stat-pill {
+        background: rgba(11,165,164,.12); color: #0BA5A4;
+        padding: 4px 12px; border-radius: 99px;
+        font-size: 12px; font-weight: 600;
+    }
+
+    /* ── SEARCH ── */
+    .mk-search-wrap {
+        position: relative; margin-bottom: 20px;
+    }
+    .mk-search {
+        width: 100%; padding: 11px 16px 11px 40px;
+        border: 1.5px solid #e0e6ef; border-radius: 12px;
+        font-size: 14px; font-family: inherit;
+        outline: none; transition: border-color .15s;
+        box-sizing: border-box;
+        background: #fff;
+    }
+    .mk-search:focus { border-color: #0BA5A4; }
+    .mk-search-icon {
+        position: absolute; left: 13px; top: 50%;
+        transform: translateY(-50%); color: #aaa;
+    }
+
+    /* ── TIMELINE ── */
+    .mk-timeline {
+        position: relative;
+        padding-left: 28px;
+    }
+    .mk-timeline::before {
+        content: '';
+        position: absolute; left: 8px; top: 0; bottom: 0;
+        width: 2px; background: #e0e8f0;
+    }
+
+    /* ── NALAZ CARD ── */
+    .mk-entry {
+        position: relative;
+        margin-bottom: 20px;
+        transition: opacity .2s;
+    }
+    .mk-entry.hidden { display: none; }
+
+    /* dot na liniji */
+    .mk-dot {
+        position: absolute; left: -24px; top: 20px;
+        width: 14px; height: 14px; border-radius: 50%;
+        background: #0BA5A4; border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #0BA5A4;
+    }
+
+    .mk-card {
+        background: #fff;
+        border: 1.5px solid #eaeef3;
+        border-radius: 16px;
+        overflow: hidden;
+        transition: box-shadow .15s;
+    }
+    .mk-card:hover { box-shadow: 0 4px 20px rgba(11,165,164,.1); }
+
+    /* card header */
+    .mk-card-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 20px;
+        background: #f7fafa;
+        border-bottom: 1px solid #eaeef3;
+        cursor: pointer;
+        user-select: none;
+    }
+    .mk-card-head-left { display: flex; align-items: center; gap: 12px; }
+    .mk-date-badge {
+        background: #0BA5A4; color: #fff;
+        padding: 4px 12px; border-radius: 8px;
+        font-size: 12px; font-weight: 700;
+        white-space: nowrap;
+    }
+    .mk-card-title {
+        font-size: 15px; font-weight: 700; color: #0a2a2a;
+    }
+    .mk-card-sub {
+        font-size: 12px; color: #888; margin-top: 2px;
+    }
+    .mk-chevron {
+        color: #aaa; font-size: 18px;
+        transition: transform .2s;
+    }
+    .mk-card.open .mk-chevron { transform: rotate(180deg); }
+
+    /* card body */
+    .mk-card-body {
+        display: none;
+        padding: 20px;
+    }
+    .mk-card.open .mk-card-body { display: block; }
+
+    .mk-section { margin-bottom: 16px; }
+    .mk-section:last-child { margin-bottom: 0; }
+    .mk-section-label {
+        font-size: 11px; font-weight: 700; letter-spacing: .5px;
+        text-transform: uppercase; color: #0BA5A4; margin-bottom: 6px;
+    }
+    .mk-section-text {
+        font-size: 14px; color: #333; line-height: 1.6;
+        background: #f7fafa; border-radius: 10px;
+        padding: 12px 14px; border-left: 3px solid #0BA5A4;
+    }
+    .mk-section-text.dijagnoza { border-color: #e74c3c; background: #fdf6f6; }
+    .mk-section-text.terapija  { border-color: #27ae60; background: #f4fdf6; }
+
+    .mk-actions {
+        display: flex; gap: 8px; margin-top: 16px;
+        padding-top: 16px; border-top: 1px solid #f0f0f0;
+    }
+    .hz-btn-sm {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 7px 14px; border-radius: 8px;
+        font-size: 13px; font-weight: 600; text-decoration: none;
+        transition: all .15s; border: none; cursor: pointer;
+    }
+    .hz-btn-outline { background: #f0f3f7; color: #555; }
+    .hz-btn-outline:hover { background: #e0e8f5; color: #333; }
+    .hz-btn-teal { background: #0BA5A4; color: #fff; }
+    .hz-btn-teal:hover { background: #099493; }
+
+    /* ── EMPTY ── */
+    .mk-empty {
+        text-align: center; padding: 60px 20px; color: #aaa;
+    }
+    .mk-empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .mk-empty h3 { color: #0BA5A4; margin: 0 0 8px; }
+</style>
+
+<div class="mk-page">
+
+    <a href="javascript:history.back()" class="hz-back">Nazad</a>
+
+
+    @* ── PATIENT HEADER ── *@
+    @if (pacijent != null)
+    {
+        var initijali = $"{pacijent.Ime?[0]}{pacijent.Prezime?[0]}".ToUpper();
+        <div class="mk-header">
+            <div class="mk-avatar">@initijali</div>
+            <div class="mk-header-info">
+                <h1>@pacijent.Ime @pacijent.Prezime</h1>
+                <div class="mk-header-meta">
+                    @if (!string.IsNullOrEmpty(pacijent.BrojKartona))
+                    {
+                        <span>📋 Karton: <strong>@pacijent.BrojKartona</strong></span>
+                    }
+                    @if (!string.IsNullOrEmpty(pacijent.Email))
+                    {
+                        <span>✉️ @pacijent.Email</span>
+                    }
+                    @if (!string.IsNullOrEmpty(pacijent.PhoneNumber))
+                    {
+                        <span>📞 @pacijent.PhoneNumber</span>
+                    }
+                </div>
+                <div class="mk-stat-pills">
+                    <span class="mk-stat-pill">@nalazi.Count pregleda</span>
+                    @if (nalazi.Any())
+                    {
+                        <span class="mk-stat-pill">Zadnji: @nalazi.First().Termin?.Datum.ToString("dd.MM.yyyy")</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ── SEARCH ── *@
+    @if (nalazi.Any())
+    {
+        <div class="mk-search-wrap">
+            <svg class="mk-search-icon" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input class="mk-search" type="text" id="mk-search-input"
+                   placeholder="Pretraži po dijagnozi, opisu ili terapiji..." />
+        </div>
+    }
+
+    @* ── TIMELINE ── *@
+    @if (!nalazi.Any())
+    {
+        <div class="mk-empty">
+            <div class="mk-empty-icon">📂</div>
+            <h3>Nema nalaza</h3>
+            <p>Za ovog pacijenta još nema evidentiranih pregleda.</p>
+        </div>
+    }
+    else
+    {
+        <div class="mk-timeline" id="mk-timeline">
+            @foreach (var nalaz in nalazi)
+            {
+                var datum    = nalaz.Termin?.Datum.ToString("dd.MM.yyyy") ?? "—";
+                var vrijeme  = nalaz.Termin?.Vrijeme.ToString("HH:mm") ?? "";
+                var usluga   = nalaz.Termin?.Usluga?.Naziv ?? "Pregled";
+                var searchTxt = $"{nalaz.Dijagnoza} {nalaz.Opis} {nalaz.Terapija}".ToLower();
+
+                <div class="mk-entry" data-search="@searchTxt">
+                    <div class="mk-dot"></div>
+                    <div class="mk-card" onclick="toggleKartu(this)">
+                        <div class="mk-card-head">
+                            <div class="mk-card-head-left">
+                                <span class="mk-date-badge">@datum</span>
+                                <div>
+                                    <div class="mk-card-title">@nalaz.Dijagnoza</div>
+                                    <div class="mk-card-sub">@vrijeme &bull; @usluga</div>
+                                </div>
+                            </div>
+                            <span class="mk-chevron">⌄</span>
+                        </div>
+                        <div class="mk-card-body">
+                            <div class="mk-section">
+                                <div class="mk-section-label">🔬 Opis nalaza</div>
+                                <div class="mk-section-text">@nalaz.Opis</div>
+                            </div>
+                            <div class="mk-section">
+                                <div class="mk-section-label">🩺 Dijagnoza</div>
+                                <div class="mk-section-text dijagnoza">@nalaz.Dijagnoza</div>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(nalaz.Terapija))
+                            {
+                                <div class="mk-section">
+                                    <div class="mk-section-label">💊 Terapija</div>
+                                    <div class="mk-section-text terapija">@nalaz.Terapija</div>
+                                </div>
+                            }
+                            <div class="mk-actions">
+                                <a asp-controller="Nalaz" asp-action="Details"
+                                   asp-route-id="@nalaz.NalazId"
+                                   class="hz-btn-sm hz-btn-outline">
+                                    📄 Detalji
+                                </a>
+                                <a asp-controller="Nalaz" asp-action="Print"
+                                   asp-route-id="@nalaz.NalazId"
+                                   target="_blank"
+                                   class="hz-btn-sm hz-btn-teal">
+                                    🖨️ Štampaj nalaz
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div id="mk-no-results" style="display:none" class="mk-empty">
+            <div class="mk-empty-icon">🔍</div>
+            <h3>Nema rezultata</h3>
+            <p>Pokušajte s drugim pojmom pretrage.</p>
+        </div>
+    }
+
+</div>
+
+<script>
+    function toggleKartu(card) {
+        card.classList.toggle('open');
+    }
+
+    // Pretraga
+    var searchInput = document.getElementById('mk-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            var q = this.value.toLowerCase().trim();
+            var entries = document.querySelectorAll('.mk-entry');
+            var vidljivo = 0;
+            entries.forEach(function (e) {
+                var txt = e.dataset.search || '';
+                if (!q || txt.includes(q)) {
+                    e.classList.remove('hidden');
+                    vidljivo++;
+                } else {
+                    e.classList.add('hidden');
+                }
+            });
+            var noRes = document.getElementById('mk-no-results');
+            if (noRes) noRes.style.display = vidljivo === 0 ? 'block' : 'none';
+        });
+    }
+</script>
